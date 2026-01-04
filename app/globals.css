@@ -394,6 +394,67 @@ body {
   margin-top: auto;
 }
 
+.contrast {
+  display: grid;
+  gap: 12px;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+}
+
+.toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.contrast-list {
+  display: grid;
+  gap: 8px;
+}
+
+.contrast-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.contrast-value {
+  opacity: 0.7;
+}
+
+.badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.badge-aaa {
+  background: color-mix(in oklch, oklch(85% 0.12 150), white 30%);
+  color: oklch(25% 0.1 150);
+}
+
+.badge-aa {
+  background: color-mix(in oklch, oklch(80% 0.1 250), white 35%);
+  color: oklch(25% 0.08 250);
+}
+
+.badge-fail {
+  background: color-mix(in oklch, oklch(80% 0.15 30), white 25%);
+  color: oklch(25% 0.1 30);
+}
+
 .score-header {
   display: flex;
   justify-content: space-between;

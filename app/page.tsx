@@ -9,6 +9,12 @@ import { generatePair } from "@/lib/color/model";
 import { buildPalette } from "@/lib/color/palette";
 import type { OKLCH } from "@/lib/color/oklch";
 import { clamp, toCss } from "@/lib/color/oklch";
+import {
+  contrastRatio,
+  fixPaletteContrast,
+  getContrastLevel,
+  pickTextColor,
+} from "@/lib/color/contrast";
 
 const formatOklch = (color: OKLCH) =>
   `oklch(${Math.round(color.l * 100)}% ${color.c.toFixed(3)} ${Math.round(
@@ -25,13 +31,24 @@ const variationOffsets = [-12, 0, 12];
 export default function Home() {
   const [energy, setEnergy] = useState(45);
   const [tension, setTension] = useState(35);
+  const [autoFix, setAutoFix] = useState(true);
 
   const pair = useMemo(
     () => generatePair({ energy, tension }),
     [energy, tension]
   );
 
-  const palette = useMemo(() => buildPalette(pair), [pair]);
+  const basePalette = useMemo(() => buildPalette(pair), [pair]);
+  const { palette, primaryText } = useMemo(() => {
+    if (autoFix) {
+      return fixPaletteContrast(basePalette);
+    }
+
+    return {
+      palette: basePalette,
+      primaryText: pickTextColor(basePalette.primary).color,
+    };
+  }, [autoFix, basePalette]);
 
   const swatchA = toCss(pair.a);
   const swatchB = toCss(pair.b);
@@ -53,11 +70,55 @@ export default function Home() {
       text: toCss(palette.text),
       muted: toCss(palette.muted),
       primary: toCss(palette.primary),
-      primaryText: swatchText(palette.primary),
+      primaryText: toCss(primaryText),
       accent: toCss(palette.accent),
     }),
-    [palette]
+    [palette, primaryText]
   );
+
+  const contrastChecks = useMemo(() => {
+    const items = [
+      {
+        key: "text-bg",
+        label: "Text on background",
+        foreground: palette.text,
+        background: palette.background,
+      },
+      {
+        key: "text-surface",
+        label: "Text on surface",
+        foreground: palette.text,
+        background: palette.surface,
+      },
+      {
+        key: "muted-bg",
+        label: "Muted on background",
+        foreground: palette.muted,
+        background: palette.background,
+      },
+      {
+        key: "primary",
+        label: "Primary text on primary",
+        foreground: primaryText,
+        background: palette.primary,
+      },
+      {
+        key: "accent",
+        label: "Accent on background",
+        foreground: palette.accent,
+        background: palette.background,
+      },
+    ];
+
+    return items.map((item) => {
+      const ratio = contrastRatio(item.foreground, item.background);
+      return {
+        ...item,
+        ratio,
+        level: getContrastLevel(ratio),
+      };
+    });
+  }, [palette, primaryText]);
 
   const variations = useMemo(() => {
     return variationOffsets.flatMap((yOffset) =>
@@ -267,6 +328,30 @@ export default function Home() {
                   className="score-fill"
                   style={{ width: formatPercent(pair.metrics.score) }}
                 />
+              </div>
+            </div>
+            <div className="contrast">
+              <div className="panel-title">Accessibility</div>
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={autoFix}
+                  onChange={(event) => setAutoFix(event.target.checked)}
+                />
+                <span>Fix contrast</span>
+              </label>
+              <div className="contrast-list">
+                {contrastChecks.map((item) => (
+                  <div key={item.key} className="contrast-item">
+                    <span>{item.label}</span>
+                    <span className={`badge badge-${item.level.toLowerCase()}`}>
+                      {item.level}
+                    </span>
+                    <span className="contrast-value">
+                      {item.ratio.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

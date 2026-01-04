@@ -15,3 +15,15 @@ Explore color as a continuous space.
 - UI skeleton layout
 - OKLCH utilities stub in lib/color
 - README vision and scope
+
+## Development
+
+- Install dependencies: 
+pm install`r
+- Run dev server: 
+pm run dev`r
+- Build: 
+pm run build`r
+- Start: 
+pm run start`r
+

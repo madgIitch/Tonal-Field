@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: oklch(98% 0.02 90);
   --surface: oklch(96% 0.03 90);
   --text: oklch(15% 0.02 90);
@@ -42,6 +42,7 @@ body {
 .tagline {
   opacity: 0.7;
   font-size: 14px;
+  text-align: right;
 }
 
 .frame {
@@ -77,7 +78,7 @@ body {
   display: block;
 }
 
-.skeleton {
+.field-grid {
   display: grid;
   gap: 16px;
   grid-template-columns: 1fr 2fr 1fr;
@@ -89,6 +90,166 @@ body {
   padding: 24px;
   border: 1px solid color-mix(in oklch, var(--surface), black 12%);
   min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-title {
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.controls {
+  display: grid;
+  gap: 20px;
+}
+
+.slider {
+  display: grid;
+  gap: 10px;
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.slider-label {
+  font-weight: 600;
+}
+
+.slider-description {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+.slider-value {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.slider-input {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.slider-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.pair-compact .swatch {
+  min-height: 140px;
+}
+
+.swatch {
+  border-radius: 16px;
+  padding: 16px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.swatch-label {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: color-mix(in oklch, white 85%, var(--text));
+}
+
+.swatch-value {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: color-mix(in oklch, white 75%, var(--surface));
+  color: var(--text);
+  align-self: flex-start;
+}
+
+.palette-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.palette-swatch {
+  border-radius: 14px;
+  padding: 14px;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.palette-role {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  opacity: 0.7;
+}
+
+.palette-value {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: color-mix(in oklch, white 70%, transparent);
+  width: fit-content;
+}
+
+.metrics {
+  display: grid;
+  gap: 12px;
+}
+
+.metric {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.score {
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.score-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+}
+
+.score-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--surface), black 12%);
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, oklch(70% 0.18 150), oklch(72% 0.2 20));
+  border-radius: inherit;
 }
 
 @media (max-width: 900px) {
@@ -97,7 +258,11 @@ body {
     align-items: flex-start;
   }
 
-  .skeleton {
+  .tagline {
+    text-align: left;
+  }
+
+  .field-grid {
     grid-template-columns: 1fr;
   }
 }

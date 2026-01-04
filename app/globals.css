@@ -1,0 +1,103 @@
+﻿:root {
+  --bg: oklch(98% 0.02 90);
+  --surface: oklch(96% 0.03 90);
+  --text: oklch(15% 0.02 90);
+  --accent: oklch(70% 0.15 200);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px circle at 20% 20%, oklch(99% 0.03 90), transparent 60%),
+    radial-gradient(900px circle at 80% 10%, oklch(98% 0.04 120), transparent 55%),
+    var(--bg);
+  color: var(--text);
+  font-family: "IBM Plex Sans", "Space Grotesk", sans-serif;
+}
+
+.main {
+  padding: 32px 24px 64px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+}
+
+.logo {
+  font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+.tagline {
+  opacity: 0.7;
+  font-size: 14px;
+}
+
+.frame {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section {
+  background: color-mix(in oklch, var(--surface), white 40%);
+  border: 1px solid color-mix(in oklch, var(--surface), black 10%);
+  border-radius: 20px;
+  padding: 32px;
+  backdrop-filter: blur(8px);
+}
+
+.section-header {
+  margin-bottom: 24px;
+}
+
+.section-title {
+  margin: 0 0 8px;
+  font-size: 32px;
+  font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.section-subtitle {
+  margin: 0;
+  opacity: 0.7;
+}
+
+.section-body {
+  display: block;
+}
+
+.skeleton {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr 2fr 1fr;
+}
+
+.panel {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid color-mix(in oklch, var(--surface), black 12%);
+  min-height: 160px;
+}
+
+@media (max-width: 900px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .skeleton {
+    grid-template-columns: 1fr;
+  }
+}

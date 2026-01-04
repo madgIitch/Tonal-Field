@@ -8,13 +8,15 @@ import { Slider } from "@/components/Slider";
 import { generatePair } from "@/lib/color/model";
 import { buildPalette } from "@/lib/color/palette";
 import type { OKLCH } from "@/lib/color/oklch";
-import { clamp, toCss } from "@/lib/color/oklch";
+import { clamp, toCss, toHex } from "@/lib/color/oklch";
 import {
   contrastRatio,
   fixPaletteContrast,
+  fixPaletteContrastBasic,
   getContrastLevel,
   pickTextColor,
 } from "@/lib/color/contrast";
+import type { PaletteRole } from "@/lib/color/palette";
 
 const formatOklch = (color: OKLCH) =>
   `oklch(${Math.round(color.l * 100)}% ${color.c.toFixed(3)} ${Math.round(
@@ -32,6 +34,9 @@ export default function Home() {
   const [energy, setEnergy] = useState(45);
   const [tension, setTension] = useState(35);
   const [autoFix, setAutoFix] = useState(true);
+  const [isPro, setIsPro] = useState(false);
+  const [savedCount, setSavedCount] = useState(0);
+  const maxFreeSaves = 2;
 
   const pair = useMemo(
     () => generatePair({ energy, tension }),
@@ -41,14 +46,16 @@ export default function Home() {
   const basePalette = useMemo(() => buildPalette(pair), [pair]);
   const { palette, primaryText } = useMemo(() => {
     if (autoFix) {
-      return fixPaletteContrast(basePalette);
+      return isPro
+        ? fixPaletteContrast(basePalette)
+        : fixPaletteContrastBasic(basePalette);
     }
 
     return {
       palette: basePalette,
       primaryText: pickTextColor(basePalette.primary).color,
     };
-  }, [autoFix, basePalette]);
+  }, [autoFix, basePalette, isPro]);
 
   const swatchA = toCss(pair.a);
   const swatchB = toCss(pair.b);
@@ -75,6 +82,60 @@ export default function Home() {
     }),
     [palette, primaryText]
   );
+
+  const fullRoles: PaletteRole[] = [
+    "background",
+    "surface",
+    "primary",
+    "accent",
+    "text",
+    "muted",
+  ];
+  const previewRoles: PaletteRole[] = [
+    "background",
+    "surface",
+    "primary",
+    "text",
+  ];
+
+  const paletteDisplay = useMemo(() => {
+    const roles = isPro ? fullRoles : previewRoles;
+    const locked = isPro ? [] : ["accent", "muted"];
+
+    const visible = roles.map((role) => ({
+      key: role,
+      label: role.charAt(0).toUpperCase() + role.slice(1),
+      color: palette[role],
+    }));
+
+    const lockedItems = locked.map((role) => ({
+      key: role,
+      label: role.charAt(0).toUpperCase() + role.slice(1),
+      color: palette[role],
+      locked: true,
+    }));
+
+    return [...visible, ...lockedItems];
+  }, [isPro, palette]);
+
+  const exportRoles = isPro ? fullRoles : previewRoles;
+  const hexTokens = exportRoles.map((role) => ({
+    role,
+    value: toHex(palette[role]),
+  }));
+
+  const canSave = isPro || savedCount < maxFreeSaves;
+
+  const handleSave = () => {
+    if (!canSave) {
+      return;
+    }
+    setSavedCount((count) => count + 1);
+  };
+
+  const handleUpgrade = () => {
+    setIsPro(true);
+  };
 
   const contrastChecks = useMemo(() => {
     const items = [
@@ -218,31 +279,25 @@ export default function Home() {
               </div>
             </div>
             <div className="palette-grid">
-              {[
-                { key: "background", label: "Background", color: palette.background },
-                { key: "surface", label: "Surface", color: palette.surface },
-                { key: "primary", label: "Primary", color: palette.primary },
-                { key: "accent", label: "Accent", color: palette.accent },
-                { key: "text", label: "Text", color: palette.text },
-                { key: "muted", label: "Muted", color: palette.muted },
-              ].map((item) => (
+              {paletteDisplay.map((item) => (
                 <div
                   key={item.key}
-                  className="palette-swatch"
+                  className={`palette-swatch${item.locked ? " palette-locked" : ""}`}
                   style={{
                     background: toCss(item.color),
                     color: swatchText(item.color),
                   }}
                 >
                   <div className="palette-role">{item.label}</div>
-                <div className="palette-value">{formatOklch(item.color)}</div>
+                  <div className="palette-value">{formatOklch(item.color)}</div>
+                  {item.locked ? <div className="locked-pill">Pro</div> : null}
                 </div>
               ))}
             </div>
             <div className="palette-preview">
               <div className="panel-title">Usage preview</div>
               <div
-                className="ui-preview"
+                className={`ui-preview${isPro ? "" : " preview-locked"}`}
                 style={{
                   background: paletteStyles.background,
                   color: paletteStyles.text,
@@ -286,6 +341,20 @@ export default function Home() {
                     </button>
                   </div>
                 </div>
+                {!isPro ? (
+                  <div className="upgrade-overlay">
+                    <div>
+                      Unlock full kit previews and advanced exports with Pro.
+                    </div>
+                    <button
+                      type="button"
+                      className="upgrade-btn"
+                      onClick={handleUpgrade}
+                    >
+                      Upgrade
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -338,8 +407,15 @@ export default function Home() {
                   checked={autoFix}
                   onChange={(event) => setAutoFix(event.target.checked)}
                 />
-                <span>Fix contrast</span>
+                <span>
+                  Fix contrast {isPro ? "(advanced)" : "(basic)"}
+                </span>
               </label>
+              {!isPro ? (
+                <div className="upgrade-hint">
+                  Pro unlocks advanced auto-fix for accent and muted roles.
+                </div>
+              ) : null}
               <div className="contrast-list">
                 {contrastChecks.map((item) => (
                   <div key={item.key} className="contrast-item">
@@ -353,6 +429,72 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+            </div>
+            <div className="export">
+              <div className="panel-title">Export</div>
+              <div className="export-block">
+                <div className="export-title">HEX tokens</div>
+                <div className="export-grid">
+                  {hexTokens.map((token) => (
+                    <div key={token.role} className="export-token">
+                      <span>{token.role}</span>
+                      <span>{token.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className={`export-block${isPro ? "" : " export-locked"}`}>
+                <div className="export-title">Pro exports</div>
+                <div className="export-options">
+                  <button className="export-btn" type="button" disabled={!isPro}>
+                    CSS variables
+                  </button>
+                  <button className="export-btn" type="button" disabled={!isPro}>
+                    JSON tokens
+                  </button>
+                  <button className="export-btn" type="button" disabled={!isPro}>
+                    Tailwind config
+                  </button>
+                </div>
+                {!isPro ? (
+                  <div className="upgrade-hint">
+                    Upgrade to export full kits and developer formats.
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <div className="plan">
+              <div className="panel-title">Plan</div>
+              <div className="plan-row">
+                <span className={`plan-pill ${isPro ? "plan-pro" : "plan-free"}`}>
+                  {isPro ? "Pro" : "Free"}
+                </span>
+                {!isPro ? (
+                  <button type="button" className="upgrade-btn" onClick={handleUpgrade}>
+                    Upgrade
+                  </button>
+                ) : (
+                  <span className="plan-status">Unlocked</span>
+                )}
+              </div>
+              <div className="plan-row">
+                <button
+                  type="button"
+                  className="save-btn"
+                  onClick={handleSave}
+                  disabled={!canSave}
+                >
+                  Save palette
+                </button>
+                <span className="save-count">
+                  {isPro ? "Unlimited saves" : `Saved ${savedCount}/${maxFreeSaves}`}
+                </span>
+              </div>
+              {!canSave && !isPro ? (
+                <div className="upgrade-hint">
+                  Free plan limit reached. Upgrade for unlimited saves.
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

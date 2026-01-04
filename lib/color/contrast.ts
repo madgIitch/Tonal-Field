@@ -1,48 +1,15 @@
 import type { OKLCH } from "./oklch";
 import type { Palette } from "./palette";
-import { clamp } from "./oklch";
+import { clamp, oklchToLinearSrgb } from "./oklch";
 
 export type ContrastLevel = "AAA" | "AA" | "Fail";
+export type FixResult = { palette: Palette; primaryText: OKLCH };
 
 export const LIGHT_TEXT: OKLCH = { l: 0.98, c: 0.02, h: 90 };
 export const DARK_TEXT: OKLCH = { l: 0.14, c: 0.02, h: 90 };
 
-const OKLCH_TO_LMS = {
-  l: 0.3963377774,
-  m: 0.2158037573,
-  s: 0.1055613458,
-  t: 0.0894841775,
-  u: 1.291485548,
-};
-
-const oklchToOklab = (color: OKLCH) => {
-  const hRad = (color.h * Math.PI) / 180;
-  return {
-    L: color.l,
-    a: color.c * Math.cos(hRad),
-    b: color.c * Math.sin(hRad),
-  };
-};
-
-const oklabToLinearSrgb = (lab: { L: number; a: number; b: number }) => {
-  const l_ = lab.L + OKLCH_TO_LMS.l * lab.a + OKLCH_TO_LMS.m * lab.b;
-  const m_ = lab.L - OKLCH_TO_LMS.s * lab.a - 0.0638541728 * lab.b;
-  const s_ = lab.L - OKLCH_TO_LMS.t * lab.a - OKLCH_TO_LMS.u * lab.b;
-
-  const l = l_ * l_ * l_;
-  const m = m_ * m_ * m_;
-  const s = s_ * s_ * s_;
-
-  return {
-    r: 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
-    g: -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
-    b: -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
-  };
-};
-
 const relativeLuminance = (color: OKLCH) => {
-  const lab = oklchToOklab(color);
-  const rgb = oklabToLinearSrgb(lab);
+  const rgb = oklchToLinearSrgb(color);
 
   const r = clamp(rgb.r, 0, 1);
   const g = clamp(rgb.g, 0, 1);
@@ -152,7 +119,25 @@ const fixPrimaryForContrast = (primary: OKLCH, target: number) => {
     : { primary: primaryWithDark, primaryText: DARK_TEXT };
 };
 
-export const fixPaletteContrast = (palette: Palette) => {
+export const fixPaletteContrastBasic = (palette: Palette): FixResult => {
+  const text = adjustLightnessForTargets(
+    palette.text,
+    [palette.background, palette.surface],
+    4.5
+  );
+  const primaryFix = fixPrimaryForContrast(palette.primary, 4.5);
+
+  return {
+    palette: {
+      ...palette,
+      text,
+      primary: primaryFix.primary,
+    },
+    primaryText: primaryFix.primaryText,
+  };
+};
+
+export const fixPaletteContrast = (palette: Palette): FixResult => {
   const text = adjustLightnessForTargets(
     palette.text,
     [palette.background, palette.surface],

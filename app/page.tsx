@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { Frame } from "@/components/Frame";
+import { Field } from "@/components/Field";
 import { Section } from "@/components/Section";
 import { Slider } from "@/components/Slider";
 import { generatePair } from "@/lib/color/model";
 import { buildPalette } from "@/lib/color/palette";
 import type { OKLCH } from "@/lib/color/oklch";
-import { toCss } from "@/lib/color/oklch";
+import { clamp, toCss } from "@/lib/color/oklch";
 
 const formatOklch = (color: OKLCH) =>
   `oklch(${Math.round(color.l * 100)}% ${color.c.toFixed(3)} ${Math.round(
@@ -18,6 +19,8 @@ const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
 
 const swatchText = (color: OKLCH) =>
   color.l > 0.6 ? "oklch(20% 0.02 90)" : "oklch(98% 0.02 90)";
+
+const variationOffsets = [-12, 0, 12];
 
 export default function Home() {
   const [energy, setEnergy] = useState(45);
@@ -34,6 +37,49 @@ export default function Home() {
   const swatchB = toCss(pair.b);
   const swatchTextA = swatchText(pair.a);
   const swatchTextB = swatchText(pair.b);
+
+  const fieldBackground = useMemo(
+    () =>
+      `radial-gradient(280px circle at 20% 30%, ${swatchA}, transparent 65%),
+      radial-gradient(260px circle at 80% 70%, ${swatchB}, transparent 70%),
+      color-mix(in oklch, var(--surface), white 25%)`,
+    [swatchA, swatchB]
+  );
+
+  const paletteStyles = useMemo(
+    () => ({
+      background: toCss(palette.background),
+      surface: toCss(palette.surface),
+      text: toCss(palette.text),
+      muted: toCss(palette.muted),
+      primary: toCss(palette.primary),
+      primaryText: swatchText(palette.primary),
+      accent: toCss(palette.accent),
+    }),
+    [palette]
+  );
+
+  const variations = useMemo(() => {
+    return variationOffsets.flatMap((yOffset) =>
+      variationOffsets.map((xOffset) => {
+        const nextEnergy = clamp(energy + xOffset, 0, 100);
+        const nextTension = clamp(tension + yOffset, 0, 100);
+        const nextPair = generatePair({
+          energy: nextEnergy,
+          tension: nextTension,
+        });
+
+        return {
+          key: `${nextEnergy}-${nextTension}`,
+          energy: Math.round(nextEnergy),
+          tension: Math.round(nextTension),
+          gradient: `linear-gradient(135deg, ${toCss(nextPair.a)} 0 50%, ${toCss(
+            nextPair.b
+          )} 50% 100%)`,
+        };
+      })
+    );
+  }, [energy, tension]);
 
   return (
     <Frame>
@@ -63,6 +109,37 @@ export default function Home() {
 
           <div className="panel panel-preview">
             <div className="panel-title">Palette Kit</div>
+            <div className="field-block">
+              <div className="field-header">
+                <div className="field-title">Mood Field</div>
+                <div className="field-values">
+                  <span>Energy {energy}</span>
+                  <span>Tension {tension}</span>
+                </div>
+              </div>
+              <Field
+                energy={energy}
+                tension={tension}
+                background={fieldBackground}
+                onChange={({ energy: nextEnergy, tension: nextTension }) => {
+                  setEnergy(nextEnergy);
+                  setTension(nextTension);
+                }}
+              />
+              <div className="variation-grid">
+                {variations.map((variant) => (
+                  <div
+                    key={variant.key}
+                    className="variation-swatch"
+                    style={{ background: variant.gradient }}
+                  >
+                    <span className="variation-label">
+                      {variant.energy}/{variant.tension}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
             <div className="pair pair-compact">
               <div
                 className="swatch"
@@ -97,9 +174,58 @@ export default function Home() {
                   }}
                 >
                   <div className="palette-role">{item.label}</div>
-                  <div className="palette-value">{formatOklch(item.color)}</div>
+                <div className="palette-value">{formatOklch(item.color)}</div>
                 </div>
               ))}
+            </div>
+            <div className="palette-preview">
+              <div className="panel-title">Usage preview</div>
+              <div
+                className="ui-preview"
+                style={{
+                  background: paletteStyles.background,
+                  color: paletteStyles.text,
+                }}
+              >
+                <div
+                  className="ui-card"
+                  style={{ background: paletteStyles.surface }}
+                >
+                  <span
+                    className="ui-chip"
+                    style={{
+                      background: paletteStyles.muted,
+                      color: paletteStyles.text,
+                    }}
+                  >
+                    Muted label
+                  </span>
+                  <h3 className="ui-title">Interface sample</h3>
+                  <p className="ui-body">
+                    Primary actions use the main tone. Accent highlights secondary
+                    emphasis.
+                  </p>
+                  <div className="ui-actions">
+                    <button
+                      className="ui-btn ui-primary"
+                      style={{
+                        background: paletteStyles.primary,
+                        color: paletteStyles.primaryText,
+                      }}
+                      type="button"
+                    >
+                      Primary action
+                    </button>
+                    <button
+                      className="ui-btn ui-ghost"
+                      style={{ borderColor: paletteStyles.accent, color: paletteStyles.accent }}
+                      type="button"
+                    >
+                      Accent link
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

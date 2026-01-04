@@ -102,6 +102,111 @@ body {
   opacity: 0.6;
 }
 
+.field-block {
+  display: grid;
+  gap: 16px;
+}
+
+.field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.field-title {
+  font-weight: 600;
+}
+
+.field-values {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.field-canvas {
+  position: relative;
+  height: 280px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in oklch, var(--surface), black 10%);
+  overflow: hidden;
+  touch-action: none;
+}
+
+.field-dot {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--text), white 20%);
+  border: 2px solid color-mix(in oklch, var(--surface), white 60%);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 6px 14px color-mix(in oklch, var(--text), transparent 80%);
+}
+
+.field-axis-label {
+  position: absolute;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.65;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: color-mix(in oklch, white 75%, transparent);
+  color: var(--text);
+}
+
+.field-axis-top {
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.field-axis-bottom {
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.field-axis-left {
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.field-axis-right {
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.variation-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.variation-swatch {
+  position: relative;
+  border-radius: 12px;
+  height: 64px;
+  overflow: hidden;
+}
+
+.variation-label {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in oklch, white 70%, transparent);
+  color: var(--text);
+}
+
 .controls {
   display: grid;
   gap: 20px;
@@ -186,6 +291,65 @@ body {
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.palette-preview {
+  display: grid;
+  gap: 12px;
+}
+
+.ui-preview {
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.ui-card {
+  border-radius: 14px;
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+  box-shadow: 0 12px 20px color-mix(in oklch, var(--text), transparent 90%);
+}
+
+.ui-chip {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  border-radius: 999px;
+  width: fit-content;
+}
+
+.ui-title {
+  margin: 0;
+  font-size: 18px;
+}
+
+.ui-body {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.ui-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ui-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ui-ghost {
+  border: 1px solid currentColor;
 }
 
 .palette-swatch {

@@ -1,4 +1,4 @@
-﻿Perfecto. Te escribo **el MVP por sprints** de forma **definitiva y limpia**, incorporando **el core conceptual de Tonal Field** y **dejando preparadas las features de pago**, pero sin inflar el alcance.
+Perfecto. Te escribo **el MVP por sprints** de forma **definitiva y limpia**, incorporando **el core conceptual de Tonal Field** y **dejando preparadas las features de pago**, pero sin inflar el alcance.
 
 Esto está redactado para que puedas usarlo tal cual en:
 
@@ -301,7 +301,7 @@ Publicar un MVP sólido y presentable.
 
 ## Sprints futuros (post-MVP)
 
-## Sprint 8 - Generación rápida y presets
+## Sprint 8 — Generación rápida y presets
 
 **Objetivo:** Acelerar la exploración de paletas con variaciones rápidas.
 
@@ -318,7 +318,7 @@ Publicar un MVP sólido y presentable.
 
 ---
 
-## Sprint 9 - Lock por rol y recalculo parcial
+## Sprint 9 — Lock por rol y recalculo parcial
 
 **Objetivo:** Permitir fijar colores clave mientras se ajusta el resto.
 
@@ -335,7 +335,7 @@ Publicar un MVP sólido y presentable.
 
 ---
 
-## Sprint 10 - Importación desde imagen
+## Sprint 10 — Importación desde imagen
 
 **Objetivo:** Generar paletas desde imágenes y referencias visuales.
 
@@ -352,7 +352,7 @@ Publicar un MVP sólido y presentable.
 
 ---
 
-## Sprint 11 - Exportaciones ampliadas y compatibilidad
+## Sprint 11 — Exportaciones ampliadas y compatibilidad
 
 **Objetivo:** Mejorar el output para distintos workflows sin fricción.
 
@@ -370,7 +370,7 @@ Publicar un MVP sólido y presentable.
 
 ---
 
-## Sprint 12 - Accesibilidad avanzada
+## Sprint 12 — Accesibilidad avanzada
 
 **Objetivo:** Diseñar paletas inclusivas con soporte visual completo.
 
@@ -387,7 +387,7 @@ Publicar un MVP sólido y presentable.
 
 ---
 
-## Sprint 13 - AI y sugerencias inteligentes
+## Sprint 13 — AI y sugerencias inteligentes
 
 **Objetivo:** Automatizar estilos desde intención creativa.
 
@@ -404,7 +404,7 @@ Publicar un MVP sólido y presentable.
 
 ---
 
-## Sprint 14 - Biblioteca y comunidad de paletas
+## Sprint 14 — Biblioteca y comunidad de paletas
 
 **Objetivo:** Construir un repositorio abierto de inspiración.
 
@@ -421,7 +421,7 @@ Publicar un MVP sólido y presentable.
 
 ---
 
-## Sprint 15 - Configuración de número de colores y jerarquía
+## Sprint 15 — Configuración de número de colores y jerarquía
 
 **Objetivo:** Adaptar el sistema a distintos tamaños de paleta.
 
@@ -438,7 +438,7 @@ Publicar un MVP sólido y presentable.
 
 ---
 
-## Sprint 16 - Tema dual (light/dark)
+## Sprint 16 — Tema dual (light/dark)
 
 **Objetivo:** Generar variantes light/dark coherentes.
 

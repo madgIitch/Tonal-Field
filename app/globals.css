@@ -695,6 +695,96 @@ body {
   opacity: 0.6;
 }
 
+.import-block {
+  display: grid;
+  gap: 10px;
+}
+
+.import-input {
+  font-size: 12px;
+}
+
+.import-preview {
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklch, var(--surface), black 12%);
+  background: color-mix(in oklch, var(--surface), white 25%);
+  height: 200px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.import-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.import-placeholder {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.import-status {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.import-error {
+  font-size: 12px;
+  color: oklch(45% 0.18 30);
+}
+
+.import-results {
+  display: grid;
+  gap: 10px;
+}
+
+.import-swatches {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.import-swatch {
+  border-radius: 10px;
+  height: 44px;
+  border: 1px solid color-mix(in oklch, var(--surface), black 10%);
+}
+
+.import-apply {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--accent);
+  color: oklch(98% 0.02 90);
+  cursor: pointer;
+}
+
+.lock-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.lock-clear {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: color-mix(in oklch, var(--surface), black 10%);
+  cursor: pointer;
+}
+
 .slider {
   display: grid;
   gap: 10px;
@@ -794,6 +884,26 @@ body {
   color: var(--text);
 }
 
+.lock-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  border: none;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: color-mix(in oklch, var(--surface), black 10%);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.lock-btn.is-locked {
+  background: color-mix(in oklch, var(--accent), white 20%);
+  color: oklch(20% 0.02 90);
+}
+
 .palette-preview {
   display: grid;
   gap: 12px;
@@ -885,12 +995,17 @@ body {
 }
 
 .palette-swatch {
+  position: relative;
   border-radius: 14px;
   padding: 14px;
   min-height: 110px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+.palette-user-locked {
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--accent), white 40%);
 }
 
 .palette-role {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { ChangeEvent } from "react";
 import { Frame } from "@/components/Frame";
 import { Field } from "@/components/Field";
 import { Section } from "@/components/Section";
@@ -8,7 +9,7 @@ import { Slider } from "@/components/Slider";
 import { generatePair } from "@/lib/color/model";
 import { buildPalette } from "@/lib/color/palette";
 import type { OKLCH } from "@/lib/color/oklch";
-import { clamp, toCss } from "@/lib/color/oklch";
+import { clamp, fromRgb, toCss } from "@/lib/color/oklch";
 import {
   contrastRatio,
   fixPaletteContrast,
@@ -23,6 +24,7 @@ import {
   buildJsonTokens,
   buildTailwindConfig,
 } from "@/lib/color/export";
+import { extractDominantColors } from "@/lib/color/extract";
 
 const formatOklch = (color: OKLCH) =>
   `oklch(${Math.round(color.l * 100)}% ${color.c.toFixed(3)} ${Math.round(
@@ -33,6 +35,9 @@ const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
 
 const swatchText = (color: OKLCH) =>
   color.l > 0.6 ? "oklch(20% 0.02 90)" : "oklch(98% 0.02 90)";
+
+const formatRole = (role: PaletteRole) =>
+  role.charAt(0).toUpperCase() + role.slice(1);
 
 const variationOffsets = [-12, 0, 12];
 
@@ -71,6 +76,35 @@ const PRESET_SWATCHES = PRESETS.map((preset) => {
   };
 });
 
+const mapExtractedToRoles = (colors: OKLCH[]) => {
+  if (!colors.length) {
+    return {};
+  }
+
+  const byLightness = [...colors].sort((a, b) => a.l - b.l);
+  const byChroma = [...colors].sort((a, b) => b.c - a.c);
+  const background = byLightness[byLightness.length - 1];
+  const surface = byLightness[Math.max(0, byLightness.length - 2)] ?? background;
+  const text = byLightness[0];
+  const primary = byChroma[0] ?? background;
+  const accent = byChroma[1] ?? primary;
+
+  const muted = [...colors].sort((a, b) => {
+    const scoreA = Math.abs(a.l - 0.6) + a.c;
+    const scoreB = Math.abs(b.l - 0.6) + b.c;
+    return scoreA - scoreB;
+  })[0];
+
+  return {
+    background,
+    surface,
+    text,
+    primary,
+    accent,
+    muted: muted ?? surface,
+  };
+};
+
 const mulberry32 = (seed: number) => {
   let t = seed >>> 0;
   return () => {
@@ -103,7 +137,8 @@ type PaletteDisplayItem = {
   key: PaletteRole;
   label: string;
   color: OKLCH;
-  locked?: boolean;
+  proLocked?: boolean;
+  userLocked?: boolean;
 };
 
 export default function StudioPage() {
@@ -119,6 +154,12 @@ export default function StudioPage() {
   const [hasLoadedSeed, setHasLoadedSeed] = useState(false);
   const [hasLoadedStorage, setHasLoadedStorage] = useState(false);
   const [seed, setSeed] = useState(4242);
+  const [locks, setLocks] = useState<Partial<Record<PaletteRole, OKLCH>>>({});
+  const [imagePreview, setImagePreview] = useState("");
+  const [imageName, setImageName] = useState("");
+  const [extractedColors, setExtractedColors] = useState<OKLCH[]>([]);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractError, setExtractError] = useState("");
   const maxFreeSaves = 2;
   const storageKey = "tonal-field:saved";
 
@@ -200,18 +241,45 @@ export default function StudioPage() {
   );
 
   const basePalette = useMemo(() => buildPalette(pair), [pair]);
-  const { palette, primaryText } = useMemo(() => {
+  const paletteSeed = useMemo(() => {
+    const next = { ...basePalette };
+    (Object.entries(locks) as [PaletteRole, OKLCH][]).forEach(([role, color]) => {
+      if (color) {
+        next[role] = color;
+      }
+    });
+    return next;
+  }, [basePalette, locks]);
+
+  const autoFixResult = useMemo(() => {
     if (autoFix) {
       return isPro
-        ? fixPaletteContrast(basePalette)
-        : fixPaletteContrastBasic(basePalette);
+        ? fixPaletteContrast(paletteSeed)
+        : fixPaletteContrastBasic(paletteSeed);
     }
 
     return {
-      palette: basePalette,
-      primaryText: pickTextColor(basePalette.primary).color,
+      palette: paletteSeed,
+      primaryText: pickTextColor(paletteSeed.primary).color,
     };
-  }, [autoFix, basePalette, isPro]);
+  }, [autoFix, isPro, paletteSeed]);
+
+  const palette = useMemo(() => {
+    const next = { ...autoFixResult.palette };
+    (Object.entries(locks) as [PaletteRole, OKLCH][]).forEach(([role, color]) => {
+      if (color) {
+        next[role] = color;
+      }
+    });
+    return next;
+  }, [autoFixResult.palette, locks]);
+
+  const primaryText = useMemo(() => {
+    if (locks.primary) {
+      return pickTextColor(locks.primary).color;
+    }
+    return autoFixResult.primaryText;
+  }, [autoFixResult.primaryText, locks]);
 
   const swatchA = toCss(pair.a);
   const swatchB = toCss(pair.b);
@@ -245,19 +313,20 @@ export default function StudioPage() {
 
     const visible: PaletteDisplayItem[] = roles.map((role) => ({
       key: role,
-      label: role.charAt(0).toUpperCase() + role.slice(1),
+      label: formatRole(role),
       color: palette[role],
+      userLocked: Boolean(locks[role]),
     }));
 
     const lockedItems: PaletteDisplayItem[] = locked.map((role) => ({
       key: role,
-      label: role.charAt(0).toUpperCase() + role.slice(1),
+      label: formatRole(role),
       color: palette[role],
-      locked: true,
+      proLocked: true,
     }));
 
     return [...visible, ...lockedItems];
-  }, [isPro, palette]);
+  }, [isPro, locks, palette]);
 
   const exportRoles = isPro ? FULL_ROLES : PREVIEW_ROLES;
   const hexTokens = useMemo(
@@ -304,6 +373,78 @@ export default function StudioPage() {
     setSeed((value) => Math.max(0, Math.round(value + 1)));
   }, [seed]);
 
+  const handleToggleLock = (role: PaletteRole, color: OKLCH) => {
+    setLocks((prev) => {
+      const next = { ...prev };
+      if (next[role]) {
+        delete next[role];
+      } else {
+        next[role] = { ...color };
+      }
+      return next;
+    });
+  };
+
+  const handleClearLocks = () => {
+    setLocks({});
+  };
+
+  const handleApplyExtracted = () => {
+    if (!extractedColors.length) {
+      return;
+    }
+    const mapped = mapExtractedToRoles(extractedColors);
+    setLocks((prev) => ({ ...mapped, ...prev }));
+  };
+
+  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setExtractError("");
+    setIsExtracting(true);
+    setExtractedColors([]);
+    setImageName(file.name);
+
+    const objectUrl = URL.createObjectURL(file);
+    setImagePreview((prev) => {
+      if (prev) {
+        URL.revokeObjectURL(prev);
+      }
+      return objectUrl;
+    });
+
+    const img = new Image();
+    img.onload = () => {
+      const maxSize = 260;
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const width = Math.max(1, Math.round(img.width * scale));
+      const height = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        setExtractError("Canvas not available");
+        setIsExtracting(false);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      const data = ctx.getImageData(0, 0, width, height);
+      const colors = extractDominantColors(data, 6);
+      const parsed = colors.map((color) => fromRgb(color));
+      setExtractedColors(parsed);
+      setIsExtracting(false);
+    };
+    img.onerror = () => {
+      setExtractError("Image load failed");
+      setIsExtracting(false);
+    };
+    img.src = objectUrl;
+  };
+
   const handleUpgrade = () => {
     setIsPro(true);
   };
@@ -342,6 +483,8 @@ export default function StudioPage() {
       setCopyNotice("Copy failed");
     }
   };
+
+  const lockedRoles = useMemo(() => Object.keys(locks) as PaletteRole[], [locks]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -528,6 +671,68 @@ export default function StudioPage() {
                   })}
                 </div>
               </div>
+              <div className="import-block">
+                <div className="preset-header">
+                  <div className="preset-title">Image import</div>
+                  <div className="preset-note">Extract palette</div>
+                </div>
+                <input
+                  className="import-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                />
+                <label className="toggle toggle-inline">
+                  <input type="checkbox" disabled />
+                  <span>OCR (coming soon)</span>
+                </label>
+                {imagePreview ? (
+                  <div className="import-preview">
+                    <img src={imagePreview} alt="Uploaded preview" />
+                    <span>{imageName}</span>
+                  </div>
+                ) : (
+                  <div className="import-placeholder">No image loaded.</div>
+                )}
+                {isExtracting ? (
+                  <div className="import-status">Extracting colors...</div>
+                ) : null}
+                {extractError ? (
+                  <div className="import-error">{extractError}</div>
+                ) : null}
+                {extractedColors.length ? (
+                  <div className="import-results">
+                    <div className="import-swatches">
+                      {extractedColors.map((color, index) => (
+                        <span
+                          key={`${color.h}-${index}`}
+                          className="import-swatch"
+                          style={{ background: toCss(color) }}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className="import-apply"
+                      onClick={handleApplyExtracted}
+                    >
+                      Apply to palette
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+              {lockedRoles.length ? (
+                <div className="lock-summary">
+                  <span>Locked: {lockedRoles.map(formatRole).join(", ")}</span>
+                  <button
+                    type="button"
+                    className="lock-clear"
+                    onClick={handleClearLocks}
+                  >
+                    Clear locks
+                  </button>
+                </div>
+              ) : null}
             </div>
 
             <div className="panel panel-preview">
@@ -583,7 +788,13 @@ export default function StudioPage() {
                 {paletteDisplay.map((item) => (
                   <div
                     key={item.key}
-                    className={`palette-swatch${item.locked ? " palette-locked" : ""}`}
+                    className={[
+                      "palette-swatch",
+                      item.proLocked ? "palette-locked" : "",
+                      item.userLocked ? "palette-user-locked" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
                     style={{
                       background: toCss(item.color),
                       color: swatchText(item.color),
@@ -591,7 +802,16 @@ export default function StudioPage() {
                   >
                     <div className="palette-role">{item.label}</div>
                     <div className="palette-value">{formatOklch(item.color)}</div>
-                    {item.locked ? <div className="locked-pill">Pro</div> : null}
+                    {item.proLocked ? <div className="locked-pill">Pro</div> : null}
+                    {!item.proLocked ? (
+                      <button
+                        type="button"
+                        className={`lock-btn${item.userLocked ? " is-locked" : ""}`}
+                        onClick={() => handleToggleLock(item.key, item.color)}
+                      >
+                        {item.userLocked ? "Locked" : "Lock"}
+                      </button>
+                    ) : null}
                   </div>
                 ))}
               </div>

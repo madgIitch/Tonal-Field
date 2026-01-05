@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Frame } from "@/components/Frame";
 import { Field } from "@/components/Field";
 import { Section } from "@/components/Section";
@@ -8,7 +8,7 @@ import { Slider } from "@/components/Slider";
 import { generatePair } from "@/lib/color/model";
 import { buildPalette } from "@/lib/color/palette";
 import type { OKLCH } from "@/lib/color/oklch";
-import { clamp, toCss, toHex } from "@/lib/color/oklch";
+import { clamp, toCss } from "@/lib/color/oklch";
 import {
   contrastRatio,
   fixPaletteContrast,
@@ -17,6 +17,12 @@ import {
   pickTextColor,
 } from "@/lib/color/contrast";
 import type { PaletteRole } from "@/lib/color/palette";
+import {
+  buildCssVariables,
+  buildHexTokens,
+  buildJsonTokens,
+  buildTailwindConfig,
+} from "@/lib/color/export";
 
 const formatOklch = (color: OKLCH) =>
   `oklch(${Math.round(color.l * 100)}% ${color.c.toFixed(3)} ${Math.round(
@@ -30,13 +36,109 @@ const swatchText = (color: OKLCH) =>
 
 const variationOffsets = [-12, 0, 12];
 
+const FULL_ROLES: PaletteRole[] = [
+  "background",
+  "surface",
+  "primary",
+  "accent",
+  "text",
+  "muted",
+];
+
+const PREVIEW_ROLES: PaletteRole[] = [
+  "background",
+  "surface",
+  "primary",
+  "text",
+];
+
+type ExportType = "css" | "json" | "tailwind";
+
+type SavedPalette = {
+  id: string;
+  energy: number;
+  tension: number;
+  autoFix: boolean;
+  createdAt: string;
+};
+
 export default function Home() {
   const [energy, setEnergy] = useState(45);
   const [tension, setTension] = useState(35);
   const [autoFix, setAutoFix] = useState(true);
   const [isPro, setIsPro] = useState(false);
-  const [savedCount, setSavedCount] = useState(0);
+  const [savedPalettes, setSavedPalettes] = useState<SavedPalette[]>([]);
+  const [exportType, setExportType] = useState<ExportType>("css");
+  const [copyNotice, setCopyNotice] = useState("");
+  const [copyScope, setCopyScope] = useState<"" | "export" | "share">("");
+  const [shareUrl, setShareUrl] = useState("");
+  const [hasLoadedSeed, setHasLoadedSeed] = useState(false);
+  const [hasLoadedStorage, setHasLoadedStorage] = useState(false);
   const maxFreeSaves = 2;
+  const storageKey = "tonal-field:saved";
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const energyParam = params.get("e");
+    const tensionParam = params.get("t");
+    const autoFixSeed = params.get("af");
+
+    if (energyParam !== null) {
+      const energySeed = Number(energyParam);
+      if (!Number.isNaN(energySeed)) {
+        setEnergy(clamp(energySeed, 0, 100));
+      }
+    }
+
+    if (tensionParam !== null) {
+      const tensionSeed = Number(tensionParam);
+      if (!Number.isNaN(tensionSeed)) {
+        setTension(clamp(tensionSeed, 0, 100));
+      }
+    }
+
+    if (autoFixSeed === "0" || autoFixSeed === "1") {
+      setAutoFix(autoFixSeed === "1");
+    }
+
+    setHasLoadedSeed(true);
+  }, [clamp]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as SavedPalette[];
+        if (Array.isArray(parsed)) {
+          setSavedPalettes(parsed);
+        }
+      } catch {
+        setSavedPalettes([]);
+      }
+    }
+    setHasLoadedStorage(true);
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (!hasLoadedStorage) {
+      return;
+    }
+    localStorage.setItem(storageKey, JSON.stringify(savedPalettes));
+  }, [hasLoadedStorage, savedPalettes, storageKey]);
+
+  useEffect(() => {
+    if (!hasLoadedSeed) {
+      return;
+    }
+    const params = new URLSearchParams();
+    params.set("e", String(Math.round(energy)));
+    params.set("t", String(Math.round(tension)));
+    params.set("af", autoFix ? "1" : "0");
+    const query = params.toString();
+    const nextUrl = `${window.location.pathname}?${query}`;
+    window.history.replaceState(null, "", nextUrl);
+    setShareUrl(`${window.location.origin}${nextUrl}`);
+  }, [autoFix, energy, hasLoadedSeed, tension]);
 
   const pair = useMemo(
     () => generatePair({ energy, tension }),
@@ -83,23 +185,8 @@ export default function Home() {
     [palette, primaryText]
   );
 
-  const fullRoles: PaletteRole[] = [
-    "background",
-    "surface",
-    "primary",
-    "accent",
-    "text",
-    "muted",
-  ];
-  const previewRoles: PaletteRole[] = [
-    "background",
-    "surface",
-    "primary",
-    "text",
-  ];
-
   const paletteDisplay = useMemo(() => {
-    const roles = isPro ? fullRoles : previewRoles;
+    const roles = isPro ? FULL_ROLES : PREVIEW_ROLES;
     const locked = isPro ? [] : ["accent", "muted"];
 
     const visible = roles.map((role) => ({
@@ -118,23 +205,81 @@ export default function Home() {
     return [...visible, ...lockedItems];
   }, [isPro, palette]);
 
-  const exportRoles = isPro ? fullRoles : previewRoles;
-  const hexTokens = exportRoles.map((role) => ({
-    role,
-    value: toHex(palette[role]),
-  }));
+  const exportRoles = isPro ? FULL_ROLES : PREVIEW_ROLES;
+  const hexTokens = useMemo(
+    () => buildHexTokens(palette, exportRoles),
+    [exportRoles, palette]
+  );
 
+  const exportContent = useMemo(() => {
+    switch (exportType) {
+      case "css":
+        return buildCssVariables(palette, FULL_ROLES);
+      case "json":
+        return buildJsonTokens(palette, FULL_ROLES);
+      case "tailwind":
+        return buildTailwindConfig(palette, FULL_ROLES);
+      default:
+        return buildCssVariables(palette, FULL_ROLES);
+    }
+  }, [exportType, palette]);
+
+  const savedCount = savedPalettes.length;
   const canSave = isPro || savedCount < maxFreeSaves;
 
   const handleSave = () => {
     if (!canSave) {
       return;
     }
-    setSavedCount((count) => count + 1);
+
+    const entry: SavedPalette = {
+      id: `${Date.now()}`,
+      energy,
+      tension,
+      autoFix,
+      createdAt: new Date().toISOString(),
+    };
+
+    setSavedPalettes((prev) => [entry, ...prev]);
   };
 
   const handleUpgrade = () => {
     setIsPro(true);
+  };
+
+  const handleLoad = (entry: SavedPalette) => {
+    setEnergy(entry.energy);
+    setTension(entry.tension);
+    setAutoFix(entry.autoFix);
+  };
+
+  const handleDelete = (id: string) => {
+    setSavedPalettes((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleCopy = async (
+    text: string,
+    notice: string,
+    scope: "export" | "share"
+  ) => {
+    if (!navigator.clipboard) {
+      setCopyScope(scope);
+      setCopyNotice("Clipboard unavailable");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyScope(scope);
+      setCopyNotice(notice);
+      window.setTimeout(() => {
+        setCopyNotice("");
+        setCopyScope("");
+      }, 1500);
+    } catch {
+      setCopyScope(scope);
+      setCopyNotice("Copy failed");
+    }
   };
 
   const contrastChecks = useMemo(() => {
@@ -437,7 +582,7 @@ export default function Home() {
                 <div className="export-grid">
                   {hexTokens.map((token) => (
                     <div key={token.role} className="export-token">
-                      <span>{token.role}</span>
+                      <span>{token.label}</span>
                       <span>{token.value}</span>
                     </div>
                   ))}
@@ -446,20 +591,75 @@ export default function Home() {
               <div className={`export-block${isPro ? "" : " export-locked"}`}>
                 <div className="export-title">Pro exports</div>
                 <div className="export-options">
-                  <button className="export-btn" type="button" disabled={!isPro}>
+                  <button
+                    className={`export-btn${exportType === "css" ? " export-active" : ""}`}
+                    type="button"
+                    disabled={!isPro}
+                    onClick={() => setExportType("css")}
+                  >
                     CSS variables
                   </button>
-                  <button className="export-btn" type="button" disabled={!isPro}>
+                  <button
+                    className={`export-btn${exportType === "json" ? " export-active" : ""}`}
+                    type="button"
+                    disabled={!isPro}
+                    onClick={() => setExportType("json")}
+                  >
                     JSON tokens
                   </button>
-                  <button className="export-btn" type="button" disabled={!isPro}>
+                  <button
+                    className={`export-btn${exportType === "tailwind" ? " export-active" : ""}`}
+                    type="button"
+                    disabled={!isPro}
+                    onClick={() => setExportType("tailwind")}
+                  >
                     Tailwind config
                   </button>
                 </div>
-                {!isPro ? (
+                {isPro ? (
+                  <div className="export-code">
+                    <pre className="export-pre">{exportContent}</pre>
+                    <div className="export-toolbar">
+                      <button
+                        className="copy-btn"
+                        type="button"
+                        onClick={() =>
+                          handleCopy(exportContent, "Export copied", "export")
+                        }
+                      >
+                        Copy
+                      </button>
+                      {copyNotice && copyScope === "export" ? (
+                        <span className="copy-status">{copyNotice}</span>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : (
                   <div className="upgrade-hint">
                     Upgrade to export full kits and developer formats.
                   </div>
+                )}
+              </div>
+              <div className="export-block">
+                <div className="export-title">Share</div>
+                <div className="share-row">
+                  <input
+                    className="share-input"
+                    type="text"
+                    readOnly
+                    value={shareUrl}
+                  />
+                  <button
+                    className="copy-btn"
+                    type="button"
+                    disabled={!shareUrl}
+                    onClick={() => handleCopy(shareUrl, "Link copied", "share")}
+                  >
+                    Copy link
+                  </button>
+                </div>
+                {copyNotice && copyScope === "share" ? (
+                  <div className="copy-status">{copyNotice}</div>
                 ) : null}
               </div>
             </div>
@@ -495,6 +695,38 @@ export default function Home() {
                   Free plan limit reached. Upgrade for unlimited saves.
                 </div>
               ) : null}
+              {savedPalettes.length ? (
+                <div className="saved-list">
+                  {savedPalettes.map((item) => (
+                    <div key={item.id} className="saved-item">
+                      <div className="saved-meta">
+                        <span>
+                          Energy {item.energy} / Tension {item.tension}
+                        </span>
+                        <span>{item.autoFix ? "Auto-fix" : "No fix"}</span>
+                      </div>
+                      <div className="saved-actions">
+                        <button
+                          type="button"
+                          className="saved-btn"
+                          onClick={() => handleLoad(item)}
+                        >
+                          Load
+                        </button>
+                        <button
+                          type="button"
+                          className="saved-btn saved-remove"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="saved-empty">No saved palettes yet.</div>
+              )}
             </div>
           </div>
         </div>

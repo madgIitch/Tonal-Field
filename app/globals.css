@@ -544,6 +544,10 @@ body {
   background: color-mix(in oklch, var(--surface), white 20%);
 }
 
+.export-locked {
+  opacity: 0.75;
+}
+
 .export-title {
   font-size: 12px;
   text-transform: uppercase;
@@ -568,6 +572,11 @@ body {
   flex-wrap: wrap;
 }
 
+.export-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--accent), white 50%);
+}
+
 .export-btn {
   border: 1px solid color-mix(in oklch, var(--surface), black 15%);
   border-radius: 999px;
@@ -582,6 +591,59 @@ body {
 .export-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.export-code {
+  display: grid;
+  gap: 10px;
+}
+
+.export-pre {
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--surface), black 8%);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+.export-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.copy-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: color-mix(in oklch, var(--surface), black 10%);
+  cursor: pointer;
+}
+
+.copy-status {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.share-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.share-input {
+  flex: 1;
+  border: 1px solid color-mix(in oklch, var(--surface), black 12%);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  background: transparent;
+  color: var(--text);
 }
 
 .plan {
@@ -637,6 +699,52 @@ body {
   opacity: 0.7;
 }
 
+.saved-list {
+  display: grid;
+  gap: 10px;
+}
+
+.saved-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--surface), white 25%);
+}
+
+.saved-meta {
+  display: grid;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.saved-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.saved-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: color-mix(in oklch, var(--surface), black 10%);
+  cursor: pointer;
+}
+
+.saved-remove {
+  background: color-mix(in oklch, oklch(80% 0.12 30), white 30%);
+}
+
+.saved-empty {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
 @media (max-width: 900px) {
   .header {
     flex-direction: column;
@@ -649,5 +757,15 @@ body {
 
   .field-grid {
     grid-template-columns: 1fr;
+  }
+
+  .share-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .saved-item {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

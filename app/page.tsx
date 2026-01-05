@@ -102,7 +102,7 @@ export default function Home() {
     }
 
     setHasLoadedSeed(true);
-  }, [clamp]);
+  }, []);
 
   useEffect(() => {
     const stored = localStorage.getItem(storageKey);

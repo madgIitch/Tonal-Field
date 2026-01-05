@@ -43,6 +43,9 @@ import {
   type ColorBlindnessType,
   type PairAnalysis,
 } from "@/lib/color/accessibility";
+import { publishPalette } from "@/lib/community/service";
+import type { MoodTag, StyleTag } from "@/lib/community/types";
+import { MOOD_TAGS, STYLE_TAGS } from "@/lib/community/types";
 
 const formatOklch = (color: OKLCH) =>
   `oklch(${Math.round(color.l * 100)}% ${color.c.toFixed(3)} ${Math.round(
@@ -201,6 +204,11 @@ export default function StudioPage() {
   const [showTonalPalettes, setShowTonalPalettes] = useState(false);
   const [colorBlindnessMode, setColorBlindnessMode] = useState<ColorBlindnessType>("normal");
   const [showAccessibility, setShowAccessibility] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [publishName, setPublishName] = useState("");
+  const [publishDescription, setPublishDescription] = useState("");
+  const [publishMoods, setPublishMoods] = useState<MoodTag[]>([]);
+  const [publishStyles, setPublishStyles] = useState<StyleTag[]>([]);
   const maxFreeSaves = 2;
   const storageKey = "tonal-field:saved";
 
@@ -688,6 +696,67 @@ export default function StudioPage() {
     }, 1500);
   };
 
+  const handlePublish = () => {
+    if (!publishName.trim()) {
+      alert("Please enter a name for your palette");
+      return;
+    }
+
+    if (publishMoods.length === 0) {
+      alert("Please select at least one mood tag");
+      return;
+    }
+
+    try {
+      publishPalette({
+        name: publishName.trim(),
+        description: publishDescription.trim() || undefined,
+        palette: palette,
+        parameters: {
+          energy,
+          tension,
+          hueBase,
+          hueAuto,
+          spectrumMode,
+        },
+        tags: {
+          mood: publishMoods,
+          style: publishStyles,
+        },
+      });
+
+      // Reset form
+      setPublishName("");
+      setPublishDescription("");
+      setPublishMoods([]);
+      setPublishStyles([]);
+      setShowPublishModal(false);
+
+      // Show success message
+      setCopyScope("share");
+      setCopyNotice("Published to community!");
+      window.setTimeout(() => {
+        setCopyNotice("");
+        setCopyScope("");
+      }, 2000);
+    } catch (error) {
+      alert("Failed to publish palette. Please try again.");
+      console.error(error);
+    }
+  };
+
+  const handleTogglePublishMood = (mood: MoodTag) => {
+    setPublishMoods((prev) =>
+      prev.includes(mood) ? prev.filter((m) => m !== mood) : [...prev, mood]
+    );
+  };
+
+  const handleTogglePublishStyle = (style: StyleTag) => {
+    setPublishStyles((prev) =>
+      prev.includes(style) ? prev.filter((s) => s !== style) : [...prev, style]
+    );
+  };
+
   const lockedRoles = useMemo(() => Object.keys(locks) as PaletteRole[], [locks]);
 
   useEffect(() => {
@@ -801,6 +870,14 @@ export default function StudioPage() {
                 >
                   Shuffle
                   <span className="key-hint">Space</span>
+                </button>
+                <button
+                  type="button"
+                  className="shuffle-btn"
+                  onClick={() => setShowPublishModal(true)}
+                  style={{ marginLeft: "8px", background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.3)" }}
+                >
+                  📤 Publish
                 </button>
                 <div className="seed-field">
                   <label className="seed-label" htmlFor="seed-input">
@@ -1735,6 +1812,199 @@ export default function StudioPage() {
           </div>
         </Section>
       </div>
+
+      {/* Publish Modal */}
+      {showPublishModal ? (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            padding: "20px",
+          }}
+          onClick={() => setShowPublishModal(false)}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: "12px",
+              padding: "32px",
+              maxWidth: "600px",
+              width: "100%",
+              maxHeight: "90vh",
+              overflow: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "8px" }}>
+              Publish to Community
+            </h2>
+            <p style={{ fontSize: "14px", opacity: 0.7, marginBottom: "24px" }}>
+              Share your palette with the Tonal Field community
+            </p>
+
+            {/* Name */}
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "8px" }}>
+                Palette Name *
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., Ocean Breeze, Sunset Warmth"
+                value={publishName}
+                onChange={(e) => setPublishName(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  fontSize: "14px",
+                  border: "1px solid rgba(0,0,0,0.15)",
+                  borderRadius: "6px",
+                  outline: "none",
+                }}
+                maxLength={50}
+              />
+            </div>
+
+            {/* Description */}
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "8px" }}>
+                Description (optional)
+              </label>
+              <textarea
+                placeholder="Describe your palette and its inspiration..."
+                value={publishDescription}
+                onChange={(e) => setPublishDescription(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  fontSize: "14px",
+                  border: "1px solid rgba(0,0,0,0.15)",
+                  borderRadius: "6px",
+                  outline: "none",
+                  minHeight: "80px",
+                  resize: "vertical",
+                  fontFamily: "inherit",
+                }}
+                maxLength={200}
+              />
+            </div>
+
+            {/* Mood Tags */}
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "8px" }}>
+                Mood Tags * (select at least one)
+              </label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {MOOD_TAGS.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => handleTogglePublishMood(tag.id)}
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                      border: "1px solid rgba(0,0,0,0.15)",
+                      borderRadius: "6px",
+                      background: publishMoods.includes(tag.id) ? "rgba(59, 130, 246, 0.15)" : "transparent",
+                      cursor: "pointer",
+                    }}
+                    title={tag.description}
+                  >
+                    {publishMoods.includes(tag.id) ? "✓ " : ""}{tag.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Style Tags */}
+            <div style={{ marginBottom: "24px" }}>
+              <label style={{ fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "8px" }}>
+                Style Tags (optional)
+              </label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {STYLE_TAGS.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => handleTogglePublishStyle(tag.id)}
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                      border: "1px solid rgba(0,0,0,0.15)",
+                      borderRadius: "6px",
+                      background: publishStyles.includes(tag.id) ? "rgba(59, 130, 246, 0.15)" : "transparent",
+                      cursor: "pointer",
+                    }}
+                    title={tag.description}
+                  >
+                    {publishStyles.includes(tag.id) ? "✓ " : ""}{tag.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div style={{ marginBottom: "24px", padding: "16px", background: "rgba(0,0,0,0.03)", borderRadius: "8px" }}>
+              <div style={{ fontSize: "12px", fontWeight: 600, marginBottom: "8px", opacity: 0.7 }}>
+                Preview:
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "4px", height: "60px" }}>
+                {(["background", "surface", "primary", "accent", "text", "muted"] as const).map((role) => (
+                  <div
+                    key={role}
+                    style={{
+                      background: toCss(palette[role]),
+                      borderRadius: "4px",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                onClick={() => setShowPublishModal(false)}
+                style={{
+                  padding: "10px 20px",
+                  fontSize: "14px",
+                  border: "1px solid rgba(0,0,0,0.15)",
+                  borderRadius: "6px",
+                  background: "transparent",
+                  cursor: "pointer",
+                  fontWeight: 500,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handlePublish}
+                style={{
+                  padding: "10px 20px",
+                  fontSize: "14px",
+                  border: "none",
+                  borderRadius: "6px",
+                  background: "rgb(59, 130, 246)",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                }}
+              >
+                Publish to Community
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </Frame>
   );
 }

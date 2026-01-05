@@ -457,3 +457,160 @@ export const buildAppleColorList = (palette: Palette, roles: PaletteRole[]): str
     2
   );
 };
+
+/**
+ * Dual Theme Exports (Light/Dark)
+ */
+
+import type { DualTheme } from "./theme";
+
+/**
+ * Export dual theme as CSS variables with media query
+ */
+export const buildDualThemeCss = (dualTheme: DualTheme, roles: PaletteRole[]): string => {
+  const lightVars = roles.map((role) => `  --tf-${role}: ${toCss(dualTheme.light[role])};`).join("\n");
+  const darkVars = roles.map((role) => `  --tf-${role}: ${toCss(dualTheme.dark[role])};`).join("\n");
+
+  return `:root {
+${lightVars}
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+${darkVars}
+  }
+}
+
+/* Manual theme toggle classes */
+[data-theme="light"] {
+${lightVars}
+}
+
+[data-theme="dark"] {
+${darkVars}
+}`;
+};
+
+/**
+ * Export dual theme as JSON
+ */
+export const buildDualThemeJson = (dualTheme: DualTheme, roles: PaletteRole[]): string => {
+  const lightColors: Record<string, string> = {};
+  const darkColors: Record<string, string> = {};
+
+  roles.forEach((role) => {
+    lightColors[role] = toHex(dualTheme.light[role]);
+    darkColors[role] = toHex(dualTheme.dark[role]);
+  });
+
+  return JSON.stringify(
+    {
+      light: lightColors,
+      dark: darkColors,
+    },
+    null,
+    2
+  );
+};
+
+/**
+ * Export dual theme for Tailwind
+ */
+export const buildDualThemeTailwind = (dualTheme: DualTheme, roles: PaletteRole[]): string => {
+  const lightColors: Record<string, string> = {};
+  const darkColors: Record<string, string> = {};
+
+  roles.forEach((role) => {
+    lightColors[role] = toHex(dualTheme.light[role]);
+    darkColors[role] = toHex(dualTheme.dark[role]);
+  });
+
+  return `module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        // Light theme (default)
+        ...${JSON.stringify(lightColors, null, 8).replace(/"([^"]+)":/g, "$1:")},
+      },
+    },
+  },
+  darkMode: 'class', // or 'media'
+  plugins: [
+    function({ addBase, theme }) {
+      addBase({
+        '.dark': ${JSON.stringify(darkColors, null, 10).replace(/"([^"]+)":/g, "$1:")},
+      });
+    },
+  ],
+};`;
+};
+
+/**
+ * Export dual theme for Material UI
+ */
+export const buildDualThemeMui = (dualTheme: DualTheme): string => {
+  return `import { createTheme } from '@mui/material/styles';
+
+export const lightTheme = createTheme({
+  palette: {
+    mode: 'light',
+    background: {
+      default: '${toHex(dualTheme.light.background)}',
+      paper: '${toHex(dualTheme.light.surface)}',
+    },
+    primary: {
+      main: '${toHex(dualTheme.light.primary)}',
+    },
+    secondary: {
+      main: '${toHex(dualTheme.light.accent)}',
+    },
+    text: {
+      primary: '${toHex(dualTheme.light.text)}',
+      secondary: '${toHex(dualTheme.light.muted)}',
+    },
+  },
+});
+
+export const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    background: {
+      default: '${toHex(dualTheme.dark.background)}',
+      paper: '${toHex(dualTheme.dark.surface)}',
+    },
+    primary: {
+      main: '${toHex(dualTheme.dark.primary)}',
+    },
+    secondary: {
+      main: '${toHex(dualTheme.dark.accent)}',
+    },
+    text: {
+      primary: '${toHex(dualTheme.dark.text)}',
+      secondary: '${toHex(dualTheme.dark.muted)}',
+    },
+  },
+});`;
+};
+
+/**
+ * Export dual theme for React Native / Expo
+ */
+export const buildDualThemeReactNative = (dualTheme: DualTheme, roles: PaletteRole[]): string => {
+  const lightColors: Record<string, string> = {};
+  const darkColors: Record<string, string> = {};
+
+  roles.forEach((role) => {
+    lightColors[role] = toHex(dualTheme.light[role]);
+    darkColors[role] = toHex(dualTheme.dark[role]);
+  });
+
+  return `export const Colors = {
+  light: ${JSON.stringify(lightColors, null, 4)},
+  dark: ${JSON.stringify(darkColors, null, 4)},
+};
+
+// Usage with useColorScheme:
+// import { useColorScheme } from 'react-native';
+// const colorScheme = useColorScheme();
+// const colors = Colors[colorScheme ?? 'light'];`;
+};

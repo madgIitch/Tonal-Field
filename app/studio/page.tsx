@@ -52,6 +52,20 @@ import {
   getHierarchyForSize,
   filterPaletteBySize,
 } from "@/lib/color/hierarchy";
+import type { DualTheme, ThemeMode } from "@/lib/color/theme";
+import {
+  generateDualTheme,
+  getPaletteForMode,
+  detectThemeMode,
+  compareThemeContrast,
+} from "@/lib/color/theme";
+import {
+  buildDualThemeCss,
+  buildDualThemeJson,
+  buildDualThemeTailwind,
+  buildDualThemeMui,
+  buildDualThemeReactNative,
+} from "@/lib/color/export";
 
 const formatOklch = (color: OKLCH) =>
   `oklch(${Math.round(color.l * 100)}% ${color.c.toFixed(3)} ${Math.round(
@@ -217,6 +231,8 @@ export default function StudioPage() {
   const [publishStyles, setPublishStyles] = useState<StyleTag[]>([]);
   const [kitSize, setKitSize] = useState<KitSize>(7);
   const [showHierarchy, setShowHierarchy] = useState(false);
+  const [showDualTheme, setShowDualTheme] = useState(false);
+  const [previewMode, setPreviewMode] = useState<ThemeMode>("light");
   const maxFreeSaves = 2;
   const storageKey = "tonal-field:saved";
 
@@ -432,19 +448,6 @@ export default function StudioPage() {
     [swatchA, swatchB]
   );
 
-  const paletteStyles = useMemo(
-    () => ({
-      background: toCss(palette.background),
-      surface: toCss(palette.surface),
-      text: toCss(palette.text),
-      muted: toCss(palette.muted),
-      primary: toCss(palette.primary),
-      primaryText: toCss(primaryText),
-      accent: toCss(palette.accent),
-    }),
-    [palette, primaryText]
-  );
-
   // Get roles based on kit size
   const activeRoles = useMemo(() => {
     return getRolesForSize(kitSize);
@@ -454,6 +457,33 @@ export default function StudioPage() {
   const hierarchy = useMemo(() => {
     return getHierarchyForSize(kitSize);
   }, [kitSize]);
+
+  // Generate dual theme (light + dark variants)
+  const dualTheme = useMemo(() => {
+    return generateDualTheme(palette);
+  }, [palette]);
+
+  // Get current theme mode and contrast info
+  const currentThemeMode = useMemo(() => detectThemeMode(palette), [palette]);
+  const themeContrast = useMemo(() => compareThemeContrast(dualTheme), [dualTheme]);
+
+  // Get active palette based on preview mode
+  const activePalette = useMemo(() => {
+    return getPaletteForMode(dualTheme, previewMode);
+  }, [dualTheme, previewMode]);
+
+  const paletteStyles = useMemo(
+    () => ({
+      background: toCss(activePalette.background),
+      surface: toCss(activePalette.surface),
+      text: toCss(activePalette.text),
+      muted: toCss(activePalette.muted),
+      primary: toCss(activePalette.primary),
+      primaryText: toCss(pickTextColor(activePalette.primary).color),
+      accent: toCss(activePalette.accent),
+    }),
+    [activePalette]
+  );
 
   const paletteDisplay = useMemo(() => {
     const roles = isPro ? activeRoles : PREVIEW_ROLES;
@@ -1545,8 +1575,321 @@ export default function StudioPage() {
                 ) : null}
               </div>
 
+              {/* Dual Theme Section */}
+              <div className="dual-theme-section" style={{ marginTop: "32px" }}>
+                <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>Dual Theme (Light/Dark)</span>
+                  <button
+                    type="button"
+                    className="shuffle-btn"
+                    style={{ fontSize: "12px", padding: "4px 12px" }}
+                    onClick={() => setShowDualTheme(!showDualTheme)}
+                  >
+                    {showDualTheme ? "Hide" : "Show"}
+                  </button>
+                </div>
+                {showDualTheme ? (
+                  <div style={{ marginTop: "16px" }}>
+                    {/* Mode indicator */}
+                    <div style={{ marginBottom: "20px", padding: "12px", background: "rgba(0,0,0,0.03)", borderRadius: "8px" }}>
+                      <div style={{ fontSize: "12px", marginBottom: "4px", opacity: 0.7 }}>
+                        Current palette mode:
+                      </div>
+                      <div style={{ fontSize: "14px", fontWeight: 600, textTransform: "capitalize" }}>
+                        {currentThemeMode} Theme
+                      </div>
+                    </div>
+
+                    {/* Theme Mode Toggle */}
+                    <div style={{ marginBottom: "20px" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
+                        Preview Mode
+                      </div>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        {(["light", "dark"] as ThemeMode[]).map((mode) => (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => setPreviewMode(mode)}
+                            style={{
+                              flex: 1,
+                              padding: "10px",
+                              fontSize: "13px",
+                              fontWeight: 600,
+                              border: "1px solid rgba(0,0,0,0.15)",
+                              borderRadius: "6px",
+                              background: previewMode === mode ? "rgba(0,0,0,0.08)" : "transparent",
+                              cursor: "pointer",
+                              textTransform: "capitalize",
+                            }}
+                          >
+                            {mode === "light" ? "☀️" : "🌙"} {mode}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Side-by-side preview */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
+                      {/* Light mode */}
+                      <div style={{ border: "1px solid rgba(0,0,0,0.1)", borderRadius: "8px", overflow: "hidden" }}>
+                        <div style={{ padding: "8px 12px", background: "rgba(0,0,0,0.03)", fontSize: "12px", fontWeight: 600, borderBottom: "1px solid rgba(0,0,0,0.1)" }}>
+                          ☀️ Light Mode
+                        </div>
+                        <div style={{ padding: "12px", background: toCss(dualTheme.light.background), minHeight: "120px" }}>
+                          <div style={{ padding: "12px", background: toCss(dualTheme.light.surface), borderRadius: "6px", marginBottom: "8px" }}>
+                            <div style={{ color: toCss(dualTheme.light.text), fontSize: "12px", fontWeight: 600, marginBottom: "6px" }}>
+                              Sample Card
+                            </div>
+                            <div style={{ color: toCss(dualTheme.light.muted), fontSize: "11px", marginBottom: "8px" }}>
+                              Body text with muted color for secondary information.
+                            </div>
+                            <div style={{ display: "flex", gap: "6px" }}>
+                              <div style={{ padding: "4px 8px", background: toCss(dualTheme.light.primary), color: "white", fontSize: "10px", borderRadius: "4px", fontWeight: 500 }}>
+                                Primary
+                              </div>
+                              <div style={{ padding: "4px 8px", background: toCss(dualTheme.light.accent), color: "white", fontSize: "10px", borderRadius: "4px", fontWeight: 500 }}>
+                                Accent
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Dark mode */}
+                      <div style={{ border: "1px solid rgba(0,0,0,0.1)", borderRadius: "8px", overflow: "hidden" }}>
+                        <div style={{ padding: "8px 12px", background: "rgba(0,0,0,0.03)", fontSize: "12px", fontWeight: 600, borderBottom: "1px solid rgba(0,0,0,0.1)" }}>
+                          🌙 Dark Mode
+                        </div>
+                        <div style={{ padding: "12px", background: toCss(dualTheme.dark.background), minHeight: "120px" }}>
+                          <div style={{ padding: "12px", background: toCss(dualTheme.dark.surface), borderRadius: "6px", marginBottom: "8px" }}>
+                            <div style={{ color: toCss(dualTheme.dark.text), fontSize: "12px", fontWeight: 600, marginBottom: "6px" }}>
+                              Sample Card
+                            </div>
+                            <div style={{ color: toCss(dualTheme.dark.muted), fontSize: "11px", marginBottom: "8px" }}>
+                              Body text with muted color for secondary information.
+                            </div>
+                            <div style={{ display: "flex", gap: "6px" }}>
+                              <div style={{ padding: "4px 8px", background: toCss(dualTheme.dark.primary), color: "white", fontSize: "10px", borderRadius: "4px", fontWeight: 500 }}>
+                                Primary
+                              </div>
+                              <div style={{ padding: "4px 8px", background: toCss(dualTheme.dark.accent), color: "white", fontSize: "10px", borderRadius: "4px", fontWeight: 500 }}>
+                                Accent
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contrast comparison */}
+                    <div>
+                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
+                        Contrast Ratios (WCAG 2.1)
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                        {/* Light contrast */}
+                        <div style={{ padding: "12px", background: "rgba(0,0,0,0.02)", borderRadius: "6px", border: "1px solid rgba(0,0,0,0.08)" }}>
+                          <div style={{ fontSize: "11px", fontWeight: 600, marginBottom: "8px", opacity: 0.7 }}>
+                            ☀️ Light Mode
+                          </div>
+                          <div style={{ display: "grid", gap: "4px", fontSize: "11px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <span>Text/Background:</span>
+                              <strong style={{ color: themeContrast.light.textBg >= 4.5 ? "#22c55e" : "#ef4444" }}>
+                                {themeContrast.light.textBg.toFixed(2)}:1
+                              </strong>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <span>Text/Surface:</span>
+                              <strong style={{ color: themeContrast.light.textSurface >= 4.5 ? "#22c55e" : "#ef4444" }}>
+                                {themeContrast.light.textSurface.toFixed(2)}:1
+                              </strong>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <span>Muted/Background:</span>
+                              <strong style={{ color: themeContrast.light.mutedBg >= 3.0 ? "#22c55e" : "#ef4444" }}>
+                                {themeContrast.light.mutedBg.toFixed(2)}:1
+                              </strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Dark contrast */}
+                        <div style={{ padding: "12px", background: "rgba(0,0,0,0.02)", borderRadius: "6px", border: "1px solid rgba(0,0,0,0.08)" }}>
+                          <div style={{ fontSize: "11px", fontWeight: 600, marginBottom: "8px", opacity: 0.7 }}>
+                            🌙 Dark Mode
+                          </div>
+                          <div style={{ display: "grid", gap: "4px", fontSize: "11px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <span>Text/Background:</span>
+                              <strong style={{ color: themeContrast.dark.textBg >= 4.5 ? "#22c55e" : "#ef4444" }}>
+                                {themeContrast.dark.textBg.toFixed(2)}:1
+                              </strong>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <span>Text/Surface:</span>
+                              <strong style={{ color: themeContrast.dark.textSurface >= 4.5 ? "#22c55e" : "#ef4444" }}>
+                                {themeContrast.dark.textSurface.toFixed(2)}:1
+                              </strong>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <span>Muted/Background:</span>
+                              <strong style={{ color: themeContrast.dark.mutedBg >= 3.0 ? "#22c55e" : "#ef4444" }}>
+                                {themeContrast.dark.mutedBg.toFixed(2)}:1
+                              </strong>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Color swatches comparison */}
+                    <div style={{ marginTop: "20px" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
+                        Color Comparison
+                      </div>
+                      <div style={{ display: "grid", gap: "8px" }}>
+                        {(["background", "surface", "primary", "accent", "text", "muted"] as const).map((role) => (
+                          <div key={role} style={{ display: "grid", gridTemplateColumns: "120px 1fr 1fr", gap: "8px", alignItems: "center" }}>
+                            <div style={{ fontSize: "12px", fontWeight: 500, textTransform: "capitalize" }}>
+                              {role}
+                            </div>
+                            <div style={{
+                              padding: "8px 12px",
+                              background: toCss(dualTheme.light[role]),
+                              color: swatchText(dualTheme.light[role]),
+                              fontSize: "10px",
+                              borderRadius: "4px",
+                              border: "1px solid rgba(0,0,0,0.1)",
+                              textAlign: "center",
+                              fontWeight: 500,
+                            }}>
+                              Light
+                            </div>
+                            <div style={{
+                              padding: "8px 12px",
+                              background: toCss(dualTheme.dark[role]),
+                              color: swatchText(dualTheme.dark[role]),
+                              fontSize: "10px",
+                              borderRadius: "4px",
+                              border: "1px solid rgba(0,0,0,0.1)",
+                              textAlign: "center",
+                              fontWeight: 500,
+                            }}>
+                              Dark
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Export buttons for dual theme */}
+                    <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(0,0,0,0.1)" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
+                        Export Dual Theme
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "8px" }}>
+                        <button
+                          type="button"
+                          className="export-btn"
+                          style={{ fontSize: "12px", padding: "8px 12px" }}
+                          onClick={() => {
+                            const content = buildDualThemeCss(dualTheme, FULL_ROLES);
+                            const blob = new Blob([content], { type: "text/css" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "dual-theme.css";
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                        >
+                          CSS Variables
+                        </button>
+                        <button
+                          type="button"
+                          className="export-btn"
+                          style={{ fontSize: "12px", padding: "8px 12px" }}
+                          onClick={() => {
+                            const content = buildDualThemeJson(dualTheme, FULL_ROLES);
+                            const blob = new Blob([content], { type: "application/json" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "dual-theme.json";
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                        >
+                          JSON
+                        </button>
+                        <button
+                          type="button"
+                          className="export-btn"
+                          style={{ fontSize: "12px", padding: "8px 12px" }}
+                          onClick={() => {
+                            const content = buildDualThemeTailwind(dualTheme, FULL_ROLES);
+                            const blob = new Blob([content], { type: "text/javascript" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "tailwind.dual-theme.js";
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                        >
+                          Tailwind
+                        </button>
+                        <button
+                          type="button"
+                          className="export-btn"
+                          style={{ fontSize: "12px", padding: "8px 12px" }}
+                          onClick={() => {
+                            const content = buildDualThemeMui(dualTheme);
+                            const blob = new Blob([content], { type: "text/typescript" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "mui-dual-theme.ts";
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                        >
+                          Material UI
+                        </button>
+                        <button
+                          type="button"
+                          className="export-btn"
+                          style={{ fontSize: "12px", padding: "8px 12px" }}
+                          onClick={() => {
+                            const content = buildDualThemeReactNative(dualTheme, FULL_ROLES);
+                            const blob = new Blob([content], { type: "text/typescript" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "react-native-theme.ts";
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                        >
+                          React Native
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
               <div className="palette-preview">
-                <div className="panel-title">Usage preview</div>
+                <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>Usage preview</span>
+                  {showDualTheme ? (
+                    <span style={{ fontSize: "11px", padding: "4px 10px", background: "rgba(0,0,0,0.05)", borderRadius: "4px", fontWeight: 500 }}>
+                      {previewMode === "light" ? "☀️" : "🌙"} {previewMode} mode
+                    </span>
+                  ) : null}
+                </div>
                 <div
                   className={`ui-preview${isPro ? "" : " preview-locked"}`}
                   style={{

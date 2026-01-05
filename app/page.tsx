@@ -187,7 +187,7 @@ export default function Home() {
 
   const paletteDisplay = useMemo(() => {
     const roles = isPro ? FULL_ROLES : PREVIEW_ROLES;
-    const locked = isPro ? [] : ["accent", "muted"];
+    const locked: PaletteRole[] = isPro ? [] : ["accent", "muted"];
 
     const visible = roles.map((role) => ({
       key: role,

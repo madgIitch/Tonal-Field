@@ -36,6 +36,13 @@ import {
 import type { TokenFormat } from "@/lib/color/export";
 import { STANDARD_TONES } from "@/lib/color/tonal";
 import { extractDominantColors } from "@/lib/color/extract";
+import {
+  simulateColorBlindness,
+  analyzeTextBackgroundPairs,
+  generateAccessibleAlternatives,
+  type ColorBlindnessType,
+  type PairAnalysis,
+} from "@/lib/color/accessibility";
 
 const formatOklch = (color: OKLCH) =>
   `oklch(${Math.round(color.l * 100)}% ${color.c.toFixed(3)} ${Math.round(
@@ -192,6 +199,8 @@ export default function StudioPage() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState("");
   const [showTonalPalettes, setShowTonalPalettes] = useState(false);
+  const [colorBlindnessMode, setColorBlindnessMode] = useState<ColorBlindnessType>("normal");
+  const [showAccessibility, setShowAccessibility] = useState(false);
   const maxFreeSaves = 2;
   const storageKey = "tonal-field:saved";
 
@@ -337,6 +346,23 @@ export default function StudioPage() {
 
   const basePalette = useMemo(() => buildPalette(pair), [pair]);
   const extendedPalette = useMemo(() => buildExtendedPalette(pair), [pair]);
+
+  // Apply color blindness simulation if active
+  const simulatedPalette = useMemo(() => {
+    if (colorBlindnessMode === "normal") return basePalette;
+
+    const simulated: typeof basePalette = {} as typeof basePalette;
+    (Object.keys(basePalette) as PaletteRole[]).forEach((role) => {
+      simulated[role] = simulateColorBlindness(basePalette[role], colorBlindnessMode);
+    });
+    return simulated;
+  }, [basePalette, colorBlindnessMode]);
+
+  // Accessibility analysis
+  const accessibilityAnalysis = useMemo(() => {
+    return analyzeTextBackgroundPairs(basePalette);
+  }, [basePalette]);
+
   const paletteSeed = useMemo(() => {
     const next = { ...basePalette };
     (Object.entries(locks) as [PaletteRole, OKLCH][]).forEach(([role, color]) => {
@@ -1101,6 +1127,188 @@ export default function StudioPage() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Accessibility Section */}
+              <div className="accessibility-section" style={{ marginTop: "32px" }}>
+                <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>Accessibility & Color Blindness</span>
+                  <button
+                    type="button"
+                    className="shuffle-btn"
+                    style={{ fontSize: "12px", padding: "4px 12px" }}
+                    onClick={() => setShowAccessibility(!showAccessibility)}
+                  >
+                    {showAccessibility ? "Hide" : "Show"}
+                  </button>
+                </div>
+                {showAccessibility ? (
+                  <div style={{ display: "grid", gap: "24px", marginTop: "16px" }}>
+                    {/* Color Blindness Simulator */}
+                    <div>
+                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
+                        Color Blindness Simulation
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "8px", marginBottom: "16px" }}>
+                        {(["normal", "protanopia", "deuteranopia", "tritanopia"] as ColorBlindnessType[]).map((type) => (
+                          <button
+                            key={type}
+                            type="button"
+                            className={`export-btn${colorBlindnessMode === type ? " export-active" : ""}`}
+                            style={{ fontSize: "12px", padding: "8px 12px" }}
+                            onClick={() => setColorBlindnessMode(type)}
+                          >
+                            {type === "normal" ? "Normal" :
+                             type === "protanopia" ? "Protanopia (Red-blind)" :
+                             type === "deuteranopia" ? "Deuteranopia (Green-blind)" :
+                             "Tritanopia (Blue-blind)"}
+                          </button>
+                        ))}
+                      </div>
+                      {colorBlindnessMode !== "normal" ? (
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "12px" }}>
+                          {FULL_ROLES.map((role) => {
+                            const original = basePalette[role];
+                            const simulated = simulateColorBlindness(original, colorBlindnessMode);
+                            return (
+                              <div key={role} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                <div style={{ fontSize: "11px", fontWeight: 600, textTransform: "capitalize", marginBottom: "4px" }}>
+                                  {role}
+                                </div>
+                                <div style={{
+                                  background: toCss(original),
+                                  color: swatchText(original),
+                                  padding: "12px",
+                                  borderRadius: "6px",
+                                  fontSize: "10px",
+                                  textAlign: "center",
+                                  border: "1px solid rgba(0,0,0,0.1)"
+                                }}>
+                                  Original
+                                </div>
+                                <div style={{
+                                  background: toCss(simulated),
+                                  color: swatchText(simulated),
+                                  padding: "12px",
+                                  borderRadius: "6px",
+                                  fontSize: "10px",
+                                  textAlign: "center",
+                                  border: "1px solid rgba(0,0,0,0.1)"
+                                }}>
+                                  Simulated
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {/* Contrast Analysis */}
+                    <div>
+                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
+                        Text/Background Contrast Analysis
+                      </div>
+                      <div style={{ display: "grid", gap: "12px" }}>
+                        {accessibilityAnalysis.map((analysis, idx) => {
+                          const { contrast, recommendations } = analysis;
+                          const passesAA = contrast.passes.AA;
+                          const passesAAA = contrast.passes.AAA;
+
+                          return (
+                            <div key={idx} style={{
+                              padding: "16px",
+                              background: "rgba(0,0,0,0.03)",
+                              borderRadius: "8px",
+                              border: `2px solid ${passesAAA ? "#22c55e" : passesAA ? "#eab308" : "#ef4444"}`
+                            }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                                <div style={{ fontSize: "12px", fontWeight: 600 }}>
+                                  {analysis.foregroundRole} / {analysis.backgroundRole}
+                                </div>
+                                <div style={{
+                                  fontSize: "11px",
+                                  padding: "4px 8px",
+                                  borderRadius: "4px",
+                                  background: passesAAA ? "#22c55e" : passesAA ? "#eab308" : "#ef4444",
+                                  color: "white",
+                                  fontWeight: 600
+                                }}>
+                                  {contrast.level.toUpperCase()} - {contrast.ratio.toFixed(2)}:1
+                                </div>
+                              </div>
+
+                              <div style={{ display: "flex", gap: "12px", marginBottom: recommendations ? "12px" : "0" }}>
+                                <div style={{
+                                  flex: 1,
+                                  background: toCss(analysis.background),
+                                  color: toCss(analysis.foreground),
+                                  padding: "12px",
+                                  borderRadius: "6px",
+                                  fontSize: "11px",
+                                  textAlign: "center",
+                                  fontWeight: 500
+                                }}>
+                                  Sample Text
+                                </div>
+                                <div style={{ flex: 1, display: "grid", gap: "4px", fontSize: "10px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <span>{passesAA ? "✓" : "✗"}</span>
+                                    <span>WCAG AA (4.5:1)</span>
+                                  </div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <span>{passesAAA ? "✓" : "✗"}</span>
+                                    <span>WCAG AAA (7:1)</span>
+                                  </div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <span>{contrast.passes.AALarge ? "✓" : "✗"}</span>
+                                    <span>AA Large (3:1)</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {recommendations ? (
+                                <div style={{ borderTop: "1px solid rgba(0,0,0,0.1)", paddingTop: "12px" }}>
+                                  <div style={{ fontSize: "11px", fontWeight: 600, marginBottom: "8px" }}>
+                                    Recommended Adjustments:
+                                  </div>
+                                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                                    <div>
+                                      <div style={{ fontSize: "10px", marginBottom: "4px" }}>AA Compliant:</div>
+                                      <div style={{
+                                        background: toCss(analysis.background),
+                                        color: toCss(recommendations.aa),
+                                        padding: "8px",
+                                        borderRadius: "4px",
+                                        fontSize: "10px",
+                                        textAlign: "center"
+                                      }}>
+                                        L: {Math.round(recommendations.aa.l * 100)}%
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <div style={{ fontSize: "10px", marginBottom: "4px" }}>AAA Compliant:</div>
+                                      <div style={{
+                                        background: toCss(analysis.background),
+                                        color: toCss(recommendations.aaa),
+                                        padding: "8px",
+                                        borderRadius: "4px",
+                                        fontSize: "10px",
+                                        textAlign: "center"
+                                      }}>
+                                        L: {Math.round(recommendations.aaa.l * 100)}%
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 ) : null}
               </div>

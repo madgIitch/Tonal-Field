@@ -6,7 +6,8 @@
       "Bash(for:*)",
       "Bash(do echo \"$f\")",
       "Bash(done)",
-      "Bash(do mv \"$f\" \"color-design-doc.pdf\")"
+      "Bash(do mv \"$f\" \"color-design-doc.pdf\")",
+      "Bash(npm run build:*)"
     ]
   }
 }

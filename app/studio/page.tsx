@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Frame } from "@/components/Frame";
 import { Field } from "@/components/Field";
 import { Section } from "@/components/Section";
@@ -52,6 +52,43 @@ const PREVIEW_ROLES: PaletteRole[] = [
   "text",
 ];
 
+const PRESETS = [
+  { id: "calm-sage", name: "Calm Sage", energy: 18, tension: 12 },
+  { id: "soft-sand", name: "Soft Sand", energy: 28, tension: 22 },
+  { id: "studio-blue", name: "Studio Blue", energy: 48, tension: 38 },
+  { id: "vivid-citrus", name: "Vivid Citrus", energy: 72, tension: 55 },
+  { id: "sharp-ink", name: "Sharp Ink", energy: 62, tension: 78 },
+  { id: "neon-dusk", name: "Neon Dusk", energy: 80, tension: 68 },
+];
+
+const PRESET_SWATCHES = PRESETS.map((preset) => {
+  const pair = generatePair({ energy: preset.energy, tension: preset.tension });
+  return {
+    ...preset,
+    gradient: `linear-gradient(135deg, ${toCss(pair.a)} 0 50%, ${toCss(
+      pair.b
+    )} 50% 100%)`,
+  };
+});
+
+const mulberry32 = (seed: number) => {
+  let t = seed >>> 0;
+  return () => {
+    t += 0x6d2b79f5;
+    let r = Math.imul(t ^ (t >>> 15), t | 1);
+    r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+};
+
+const generateFromSeed = (seed: number) => {
+  const rng = mulberry32(seed);
+  return {
+    energy: Math.round(rng() * 100),
+    tension: Math.round(rng() * 100),
+  };
+};
+
 type ExportType = "css" | "json" | "tailwind";
 
 type SavedPalette = {
@@ -81,6 +118,7 @@ export default function StudioPage() {
   const [shareUrl, setShareUrl] = useState("");
   const [hasLoadedSeed, setHasLoadedSeed] = useState(false);
   const [hasLoadedStorage, setHasLoadedStorage] = useState(false);
+  const [seed, setSeed] = useState(4242);
   const maxFreeSaves = 2;
   const storageKey = "tonal-field:saved";
 
@@ -89,6 +127,7 @@ export default function StudioPage() {
     const energyParam = params.get("e");
     const tensionParam = params.get("t");
     const autoFixSeed = params.get("af");
+    const randomSeedParam = params.get("s");
 
     if (energyParam !== null) {
       const energySeed = Number(energyParam);
@@ -106,6 +145,13 @@ export default function StudioPage() {
 
     if (autoFixSeed === "0" || autoFixSeed === "1") {
       setAutoFix(autoFixSeed === "1");
+    }
+
+    if (randomSeedParam !== null) {
+      const nextSeed = Number(randomSeedParam);
+      if (!Number.isNaN(nextSeed)) {
+        setSeed(Math.max(0, Math.round(nextSeed)));
+      }
     }
 
     setHasLoadedSeed(true);
@@ -141,11 +187,12 @@ export default function StudioPage() {
     params.set("e", String(Math.round(energy)));
     params.set("t", String(Math.round(tension)));
     params.set("af", autoFix ? "1" : "0");
+    params.set("s", String(seed));
     const query = params.toString();
     const nextUrl = `${window.location.pathname}?${query}`;
     window.history.replaceState(null, "", nextUrl);
     setShareUrl(`${window.location.origin}${nextUrl}`);
-  }, [autoFix, energy, hasLoadedSeed, tension]);
+  }, [autoFix, energy, hasLoadedSeed, tension, seed]);
 
   const pair = useMemo(
     () => generatePair({ energy, tension }),
@@ -250,6 +297,13 @@ export default function StudioPage() {
     setSavedPalettes((prev) => [entry, ...prev]);
   };
 
+  const handleShuffle = useCallback(() => {
+    const next = generateFromSeed(seed);
+    setEnergy(next.energy);
+    setTension(next.tension);
+    setSeed((value) => Math.max(0, Math.round(value + 1)));
+  }, [seed]);
+
   const handleUpgrade = () => {
     setIsPro(true);
   };
@@ -288,6 +342,30 @@ export default function StudioPage() {
       setCopyNotice("Copy failed");
     }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.code !== "Space") {
+        return;
+      }
+
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      handleShuffle();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleShuffle]);
 
   const contrastChecks = useMemo(() => {
     const items = [
@@ -367,6 +445,37 @@ export default function StudioPage() {
           <div className="field-grid">
             <div className="panel panel-controls">
               <div className="panel-title">Energy + Tension</div>
+              <div className="controls-toolbar">
+                <button
+                  type="button"
+                  className="shuffle-btn"
+                  onClick={handleShuffle}
+                >
+                  Shuffle
+                  <span className="key-hint">Space</span>
+                </button>
+                <div className="seed-field">
+                  <label className="seed-label" htmlFor="seed-input">
+                    Seed
+                  </label>
+                  <input
+                    id="seed-input"
+                    className="seed-input"
+                    type="number"
+                    min={0}
+                    value={seed}
+                    onChange={(event) => {
+                      const nextSeed = Number(event.target.value);
+                      setSeed(
+                        Number.isNaN(nextSeed)
+                          ? 0
+                          : Math.max(0, Math.round(nextSeed))
+                      );
+                    }}
+                  />
+                </div>
+                <div className="seed-hint">Same seed = same result.</div>
+              </div>
               <div className="controls">
                 <Slider
                   label="Energy"
@@ -384,6 +493,40 @@ export default function StudioPage() {
                   maxLabel="Sharp"
                   onChange={setTension}
                 />
+              </div>
+              <div className="preset-block">
+                <div className="preset-header">
+                  <div className="preset-title">Presets</div>
+                  <div className="preset-note">Popular moods</div>
+                </div>
+                <div className="preset-grid">
+                  {PRESET_SWATCHES.map((preset) => {
+                    const isActive =
+                      preset.energy === energy && preset.tension === tension;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        className={`preset-btn${
+                          isActive ? " preset-active" : ""
+                        }`}
+                        onClick={() => {
+                          setEnergy(preset.energy);
+                          setTension(preset.tension);
+                        }}
+                      >
+                        <span
+                          className="preset-swatch"
+                          style={{ background: preset.gradient }}
+                        />
+                        <span className="preset-name">{preset.name}</span>
+                        <span className="preset-values">
+                          {preset.energy}/{preset.tension}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 

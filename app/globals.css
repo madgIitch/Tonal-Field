@@ -584,6 +584,117 @@ body {
   gap: 20px;
 }
 
+.controls-toolbar {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: color-mix(in oklch, var(--surface), white 30%);
+}
+
+.shuffle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--accent);
+  color: oklch(98% 0.02 90);
+  cursor: pointer;
+}
+
+.key-hint {
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: color-mix(in oklch, white 80%, transparent);
+  color: inherit;
+}
+
+.seed-field {
+  display: grid;
+  gap: 6px;
+}
+
+.seed-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  opacity: 0.65;
+}
+
+.seed-input {
+  border: 1px solid color-mix(in oklch, var(--surface), black 12%);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background: transparent;
+  color: var(--text);
+}
+
+.seed-hint {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.preset-block {
+  display: grid;
+  gap: 12px;
+}
+
+.preset-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+}
+
+.preset-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.preset-btn {
+  border: 1px solid color-mix(in oklch, var(--surface), black 12%);
+  border-radius: 14px;
+  padding: 10px;
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+
+.preset-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--accent), white 50%);
+}
+
+.preset-swatch {
+  height: 38px;
+  border-radius: 10px;
+  display: block;
+}
+
+.preset-name {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.preset-values {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
 .slider {
   display: grid;
   gap: 10px;
@@ -1140,6 +1251,10 @@ body {
   .steps-grid,
   .pricing-grid,
   .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .preset-grid {
     grid-template-columns: 1fr;
   }
 

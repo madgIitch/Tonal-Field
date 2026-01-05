@@ -299,6 +299,162 @@ Publicar un MVP sólido y presentable.
 
 ---
 
+## Sprints futuros (post-MVP)
+
+## Sprint 8 - Generación rápida y presets
+
+**Objetivo:** Acelerar la exploración de paletas con variaciones rápidas.
+
+### Alcance
+
+* Modo aleatorio (atajo tipo barra espaciadora) para mover Energy/Tension
+* Seed consistente para reproducir variaciones
+* Galería de paletas predefinidas o populares
+
+### Entregables
+
+* Botón / atajo de shuffle
+* Presets navegables y aplicables
+
+---
+
+## Sprint 9 - Lock por rol y recalculo parcial
+
+**Objetivo:** Permitir fijar colores clave mientras se ajusta el resto.
+
+### Alcance
+
+* Lock por rol (Primary, Accent, etc.)
+* Recalculo del kit respetando colores bloqueados
+* UI de bloqueo clara y rápida
+
+### Entregables
+
+* Lock visible por rol
+* Ajustes que no afectan colores fijados
+
+---
+
+## Sprint 10 - Importación desde imagen
+
+**Objetivo:** Generar paletas desde imágenes y referencias visuales.
+
+### Alcance
+
+* Upload de imagen
+* Extracción de colores dominantes
+* OCR opcional para detectar tonos vinculados a texto o marca
+
+### Entregables
+
+* Input de imagen + extracción
+* Paleta derivada aplicable al sistema
+
+---
+
+## Sprint 11 - Exportaciones ampliadas y compatibilidad
+
+**Objetivo:** Mejorar el output para distintos workflows sin fricción.
+
+### Alcance
+
+* Export RGB, HSL, LCH además de OKLCH/HEX
+* CSS variables completas + tokens
+* Configs para frameworks (Tailwind, Material UI)
+* Preparación para plugins (Figma/Sketch/VS Code)
+
+### Entregables
+
+* Exportadores multi-formato
+* Copia/descarga directa
+
+---
+
+## Sprint 12 - Accesibilidad avanzada
+
+**Objetivo:** Diseñar paletas inclusivas con soporte visual completo.
+
+### Alcance
+
+* Simulador de daltonismo
+* Ajustes automáticos para AA/AAA en roles Accent/Muted
+* Comparativa de pares texto/fondo
+
+### Entregables
+
+* Modo simulación accesible
+* Alternativas recomendadas por rol
+
+---
+
+## Sprint 13 - AI y sugerencias inteligentes
+
+**Objetivo:** Automatizar estilos desde intención creativa.
+
+### Alcance
+
+* Input de estilo (retro, minimalista, corporativo, etc.)
+* Ajuste automático de Energy/Tension
+* Variaciones sugeridas
+
+### Entregables
+
+* Motor de sugerencias basado en prompts
+* Sets de paletas por estilo
+
+---
+
+## Sprint 14 - Biblioteca y comunidad de paletas
+
+**Objetivo:** Construir un repositorio abierto de inspiración.
+
+### Alcance
+
+* Biblioteca pública con filtros por mood/estilo
+* Guardado y compartición
+* Valoraciones o comentarios
+
+### Entregables
+
+* Feed de paletas comunitarias
+* Sistema de interacción social básico
+
+---
+
+## Sprint 15 - Configuración de número de colores y jerarquía
+
+**Objetivo:** Adaptar el sistema a distintos tamaños de paleta.
+
+### Alcance
+
+* Selección de 3/5/7 roles
+* Reglas de proporción (60-30-10)
+* Recomendaciones de uso por rol
+
+### Entregables
+
+* Selector de tamaño de kit
+* Jerarquías aplicables en UI
+
+---
+
+## Sprint 16 - Tema dual (light/dark)
+
+**Objetivo:** Generar variantes light/dark coherentes.
+
+### Alcance
+
+* Derivación automática dual
+* Ajustes de contraste por modo
+* Preview simultáneo
+
+### Entregables
+
+* Paletas duales consistentes
+* Preview de UI en ambos modos
+
+---
+
 ### Nota final
 
 Este MVP:

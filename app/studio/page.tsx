@@ -231,7 +231,7 @@ export default function StudioPage() {
   const [publishStyles, setPublishStyles] = useState<StyleTag[]>([]);
   const [kitSize, setKitSize] = useState<KitSize>(7);
   const [showHierarchy, setShowHierarchy] = useState(false);
-  const [showDualTheme, setShowDualTheme] = useState(false);
+  const [showDualTheme, setShowDualTheme] = useState(true);
   const [previewMode, setPreviewMode] = useState<ThemeMode>("light");
   const maxFreeSaves = 2;
   const storageKey = "tonal-field:saved";
@@ -492,19 +492,19 @@ export default function StudioPage() {
     const visible: PaletteDisplayItem[] = roles.map((role) => ({
       key: role,
       label: formatRole(role),
-      color: palette[role],
+      color: activePalette[role],
       userLocked: Boolean(locks[role]),
     }));
 
     const lockedItems: PaletteDisplayItem[] = locked.map((role) => ({
       key: role,
       label: formatRole(role),
-      color: palette[role],
+      color: activePalette[role],
       proLocked: true,
     }));
 
     return [...visible, ...lockedItems];
-  }, [isPro, locks, palette, activeRoles]);
+  }, [isPro, locks, activePalette, activeRoles]);
 
   const exportRoles = isPro ? FULL_ROLES : PREVIEW_ROLES;
   const colorTokens = useMemo(
@@ -908,6 +908,7 @@ export default function StudioPage() {
           subtitle="Tune Energy and Tension to generate palette kits."
         >
           <div className="field-grid">
+            {/* Left Column: Controls */}
             <div className="panel panel-controls">
               <div className="panel-title">Energy + Tension</div>
               <div className="controls-toolbar">
@@ -1142,6 +1143,8 @@ export default function StudioPage() {
               ) : null}
             </div>
 
+            {/* Center Column: Preview and Palette */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div className="panel panel-preview">
               <div className="panel-title">Palette Kit</div>
               <div className="field-block">
@@ -1574,9 +1577,12 @@ export default function StudioPage() {
                   </div>
                 ) : null}
               </div>
+            </div>
 
-              {/* Dual Theme Section */}
-              <div className="dual-theme-section" style={{ marginTop: "32px" }}>
+            {/* Third Column: Dual Theme / Preview Mode */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div className="panel">
+              <div className="dual-theme-section">
                 <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span>Dual Theme (Light/Dark)</span>
                   <button
@@ -1880,7 +1886,12 @@ export default function StudioPage() {
                   </div>
                 ) : null}
               </div>
+              </div>
+            </div>
 
+            {/* Fourth Column: Metrics and Actions */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div className="panel">
               <div className="palette-preview">
                 <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span>Usage preview</span>
@@ -1954,7 +1965,7 @@ export default function StudioPage() {
                   ) : null}
                 </div>
               </div>
-            </div>
+              </div>
 
             <div className="panel panel-metrics">
               <div className="panel-title">Metrics</div>
@@ -2306,6 +2317,8 @@ export default function StudioPage() {
                   <div className="saved-empty">No saved palettes yet.</div>
                 )}
               </div>
+            </div>
+            </div>
             </div>
           </div>
         </Section>

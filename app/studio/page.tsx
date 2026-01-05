@@ -46,6 +46,12 @@ import {
 import { publishPalette } from "@/lib/community/service";
 import type { MoodTag, StyleTag } from "@/lib/community/types";
 import { MOOD_TAGS, STYLE_TAGS } from "@/lib/community/types";
+import type { KitSize } from "@/lib/color/hierarchy";
+import {
+  getRolesForSize,
+  getHierarchyForSize,
+  filterPaletteBySize,
+} from "@/lib/color/hierarchy";
 
 const formatOklch = (color: OKLCH) =>
   `oklch(${Math.round(color.l * 100)}% ${color.c.toFixed(3)} ${Math.round(
@@ -209,6 +215,8 @@ export default function StudioPage() {
   const [publishDescription, setPublishDescription] = useState("");
   const [publishMoods, setPublishMoods] = useState<MoodTag[]>([]);
   const [publishStyles, setPublishStyles] = useState<StyleTag[]>([]);
+  const [kitSize, setKitSize] = useState<KitSize>(7);
+  const [showHierarchy, setShowHierarchy] = useState(false);
   const maxFreeSaves = 2;
   const storageKey = "tonal-field:saved";
 
@@ -437,8 +445,18 @@ export default function StudioPage() {
     [palette, primaryText]
   );
 
+  // Get roles based on kit size
+  const activeRoles = useMemo(() => {
+    return getRolesForSize(kitSize);
+  }, [kitSize]);
+
+  // Get hierarchy information
+  const hierarchy = useMemo(() => {
+    return getHierarchyForSize(kitSize);
+  }, [kitSize]);
+
   const paletteDisplay = useMemo(() => {
-    const roles = isPro ? FULL_ROLES : PREVIEW_ROLES;
+    const roles = isPro ? activeRoles : PREVIEW_ROLES;
     const locked: PaletteRole[] = isPro ? [] : ["accent", "muted"];
 
     const visible: PaletteDisplayItem[] = roles.map((role) => ({
@@ -456,7 +474,7 @@ export default function StudioPage() {
     }));
 
     return [...visible, ...lockedItems];
-  }, [isPro, locks, palette]);
+  }, [isPro, locks, palette, activeRoles]);
 
   const exportRoles = isPro ? FULL_ROLES : PREVIEW_ROLES;
   const colorTokens = useMemo(
@@ -964,6 +982,37 @@ export default function StudioPage() {
                   />
                   <span>Spectrum mode (map field to full hue wheel)</span>
                 </label>
+                <div style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px solid rgba(0,0,0,0.1)" }}>
+                  <label style={{ fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "12px" }}>
+                    Kit Size
+                  </label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    {([3, 5, 7] as KitSize[]).map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setKitSize(size)}
+                        style={{
+                          flex: 1,
+                          padding: "10px",
+                          fontSize: "13px",
+                          fontWeight: 600,
+                          border: "1px solid rgba(0,0,0,0.15)",
+                          borderRadius: "6px",
+                          background: kitSize === size ? "rgba(0,0,0,0.08)" : "transparent",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {size} colors
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: "11px", marginTop: "8px", opacity: 0.6 }}>
+                    {kitSize === 3 ? "Minimal (60-30-10 rule)" :
+                     kitSize === 5 ? "Standard (balanced hierarchy)" :
+                     "Complete (full palette)"}
+                  </div>
+                </div>
               </div>
               <div className="preset-block">
                 <div className="preset-header">
@@ -1386,6 +1435,112 @@ export default function StudioPage() {
                         })}
                       </div>
                     </div>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Hierarchy & Usage Section */}
+              <div className="hierarchy-section" style={{ marginTop: "32px" }}>
+                <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>Hierarchy & Usage ({kitSize} colors)</span>
+                  <button
+                    type="button"
+                    className="shuffle-btn"
+                    style={{ fontSize: "12px", padding: "4px 12px" }}
+                    onClick={() => setShowHierarchy(!showHierarchy)}
+                  >
+                    {showHierarchy ? "Hide" : "Show"}
+                  </button>
+                </div>
+                {showHierarchy ? (
+                  <div style={{ marginTop: "16px" }}>
+                    {/* Proportion Chart */}
+                    <div style={{ marginBottom: "24px" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
+                        Visual Proportion Guide
+                      </div>
+                      <div style={{ display: "flex", height: "60px", borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(0,0,0,0.1)" }}>
+                        {hierarchy.map((item) => (
+                          <div
+                            key={item.role}
+                            style={{
+                              flex: item.proportion,
+                              background: toCss(palette[item.role]),
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "11px",
+                              fontWeight: 600,
+                              color: swatchText(palette[item.role]),
+                              padding: "8px",
+                              textAlign: "center",
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            {item.proportion}%
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Usage Recommendations */}
+                    <div style={{ display: "grid", gap: "16px" }}>
+                      {hierarchy.map((item) => (
+                        <div
+                          key={item.role}
+                          style={{
+                            padding: "16px",
+                            background: "rgba(0,0,0,0.02)",
+                            borderRadius: "8px",
+                            border: "1px solid rgba(0,0,0,0.08)",
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                            <div
+                              style={{
+                                width: "40px",
+                                height: "40px",
+                                borderRadius: "6px",
+                                background: toCss(palette[item.role]),
+                                border: "1px solid rgba(0,0,0,0.1)",
+                              }}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: "14px", fontWeight: 600, textTransform: "capitalize" }}>
+                                {item.role}
+                              </div>
+                              <div style={{ fontSize: "12px", opacity: 0.6 }}>
+                                {item.proportion}% of visual space
+                              </div>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: "13px", marginBottom: "8px", fontWeight: 500 }}>
+                            {item.usage}
+                          </div>
+                          <div style={{ fontSize: "11px", opacity: 0.7 }}>
+                            <strong>Examples:</strong> {item.examples.join(", ")}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* 60-30-10 Rule Explanation */}
+                    {kitSize === 3 ? (
+                      <div style={{
+                        marginTop: "20px",
+                        padding: "16px",
+                        background: "rgba(59, 130, 246, 0.05)",
+                        borderRadius: "8px",
+                        border: "1px solid rgba(59, 130, 246, 0.15)",
+                      }}>
+                        <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "8px" }}>
+                          💡 60-30-10 Design Rule
+                        </div>
+                        <div style={{ fontSize: "12px", lineHeight: 1.5, opacity: 0.8 }}>
+                          The classic interior design rule: 60% dominant color (background), 30% secondary color (primary actions), and 10% accent color (text/highlights). This creates balanced, harmonious compositions.
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
               </div>

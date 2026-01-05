@@ -62,6 +62,13 @@ type SavedPalette = {
   createdAt: string;
 };
 
+type PaletteDisplayItem = {
+  key: PaletteRole;
+  label: string;
+  color: OKLCH;
+  locked?: boolean;
+};
+
 export default function Home() {
   const [energy, setEnergy] = useState(45);
   const [tension, setTension] = useState(35);
@@ -189,13 +196,13 @@ export default function Home() {
     const roles = isPro ? FULL_ROLES : PREVIEW_ROLES;
     const locked: PaletteRole[] = isPro ? [] : ["accent", "muted"];
 
-    const visible = roles.map((role) => ({
+    const visible: PaletteDisplayItem[] = roles.map((role) => ({
       key: role,
       label: role.charAt(0).toUpperCase() + role.slice(1),
       color: palette[role],
     }));
 
-    const lockedItems = locked.map((role) => ({
+    const lockedItems: PaletteDisplayItem[] = locked.map((role) => ({
       key: role,
       label: role.charAt(0).toUpperCase() + role.slice(1),
       color: palette[role],

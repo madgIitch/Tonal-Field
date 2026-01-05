@@ -4,13 +4,17 @@ type SectionProps = {
   title: string;
   subtitle?: string;
   children: ReactNode;
+  id?: string;
+  className?: string;
 };
 
-export function Section({ title, subtitle, children }: SectionProps) {
+export function Section({ title, subtitle, children, id, className }: SectionProps) {
+  const sectionClassName = ["section", className].filter(Boolean).join(" ");
+
   return (
-    <section className="section">
+    <section id={id} className={sectionClassName}>
       <header className="section-header">
-        <h1 className="section-title">{title}</h1>
+        <h2 className="section-title">{title}</h2>
         {subtitle ? <p className="section-subtitle">{subtitle}</p> : null}
       </header>
       <div className="section-body">{children}</div>

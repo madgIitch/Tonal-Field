@@ -1,8 +1,25 @@
-﻿export function Header() {
+import Link from "next/link";
+
+export function Header() {
   return (
     <header className="header">
-      <div className="logo">Tonal Field</div>
-      <div className="tagline">Color is not discrete. It is a field.</div>
+      <div className="logo-group">
+        <Link className="logo" href="/">
+          Tonal Field
+        </Link>
+        <span className="logo-pill">MVP</span>
+      </div>
+      <nav className="nav">
+        <Link href="/">Home</Link>
+        <Link href="/system">System</Link>
+        <Link href="/studio">Studio</Link>
+        <Link href="/pricing">Plans</Link>
+      </nav>
+      <div className="header-actions">
+        <Link className="nav-cta" href="/pricing">
+          Upgrade
+        </Link>
+      </div>
     </header>
   );
 }

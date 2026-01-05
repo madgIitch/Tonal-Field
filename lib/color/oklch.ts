@@ -1,4 +1,22 @@
-﻿export type OKLCH = {
+export type OKLCH = {
+  l: number;
+  c: number;
+  h: number;
+};
+
+export type RGB = {
+  r: number;
+  g: number;
+  b: number;
+};
+
+export type HSL = {
+  h: number;
+  s: number;
+  l: number;
+};
+
+export type LCH = {
   l: number;
   c: number;
   h: number;
@@ -84,16 +102,88 @@ const linearToSrgb = (value: number) => {
   return 1.055 * Math.pow(value, 1 / 2.4) - 0.055;
 };
 
-export const toHex = (color: OKLCH) => {
+const toSrgb = (color: OKLCH) => {
   const rgb = oklchToLinearSrgb(color);
-  const r = clamp(linearToSrgb(rgb.r), 0, 1);
-  const g = clamp(linearToSrgb(rgb.g), 0, 1);
-  const b = clamp(linearToSrgb(rgb.b), 0, 1);
+  return {
+    r: clamp(linearToSrgb(rgb.r), 0, 1),
+    g: clamp(linearToSrgb(rgb.g), 0, 1),
+    b: clamp(linearToSrgb(rgb.b), 0, 1),
+  };
+};
+
+export const toHex = (color: OKLCH) => {
+  const rgb = toSrgb(color);
   const toChannel = (channel: number) =>
     Math.round(channel * 255)
       .toString(16)
       .padStart(2, "0");
-  return `#${toChannel(r)}${toChannel(g)}${toChannel(b)}`;
+  return `#${toChannel(rgb.r)}${toChannel(rgb.g)}${toChannel(rgb.b)}`;
+};
+
+export const toRgb = (color: OKLCH): RGB => {
+  const rgb = toSrgb(color);
+  return {
+    r: Math.round(rgb.r * 255),
+    g: Math.round(rgb.g * 255),
+    b: Math.round(rgb.b * 255),
+  };
+};
+
+export const toHsl = (color: OKLCH): HSL => {
+  const rgb = toSrgb(color);
+  const max = Math.max(rgb.r, rgb.g, rgb.b);
+  const min = Math.min(rgb.r, rgb.g, rgb.b);
+  const delta = max - min;
+  const l = (max + min) / 2;
+  let h = 0;
+  let s = 0;
+
+  if (delta > 0) {
+    s = delta / (1 - Math.abs(2 * l - 1));
+    switch (max) {
+      case rgb.r:
+        h = ((rgb.g - rgb.b) / delta) % 6;
+        break;
+      case rgb.g:
+        h = (rgb.b - rgb.r) / delta + 2;
+        break;
+      default:
+        h = (rgb.r - rgb.g) / delta + 4;
+        break;
+    }
+    h *= 60;
+    if (h < 0) {
+      h += 360;
+    }
+  }
+
+  return { h, s, l };
+};
+
+export const toLch = (color: OKLCH): LCH => {
+  const rgb = oklchToLinearSrgb(color);
+  const x = rgb.r * 0.4124564 + rgb.g * 0.3575761 + rgb.b * 0.1804375;
+  const y = rgb.r * 0.2126729 + rgb.g * 0.7151522 + rgb.b * 0.072175;
+  const z = rgb.r * 0.0193339 + rgb.g * 0.119192 + rgb.b * 0.9503041;
+  const refX = 0.95047;
+  const refY = 1.0;
+  const refZ = 1.08883;
+  const f = (value: number) =>
+    value > 0.008856 ? Math.cbrt(value) : 7.787 * value + 16 / 116;
+  const fx = f(x / refX);
+  const fy = f(y / refY);
+  const fz = f(z / refZ);
+  const L = 116 * fy - 16;
+  const a = 500 * (fx - fy);
+  const b = 200 * (fy - fz);
+  const C = Math.sqrt(a * a + b * b);
+  const h = (Math.atan2(b, a) * 180) / Math.PI;
+
+  return {
+    l: clamp(L, 0, 100),
+    c: Math.max(0, C),
+    h: ((h % 360) + 360) % 360,
+  };
 };
 
 export function toCss(oklch: OKLCH) {

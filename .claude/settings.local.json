@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(xxd -l 100 \"Uso matemático y perceptual del color en Apple Liquid\"*\".pdf\")",
+      "Bash(for:*)",
+      "Bash(do echo \"$f\")",
+      "Bash(done)",
+      "Bash(do mv \"$f\" \"color-design-doc.pdf\")"
+    ]
+  }
+}

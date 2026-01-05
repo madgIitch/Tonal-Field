@@ -9,9 +9,10 @@ type FieldProps = {
   tension: number;
   background: string;
   onChange: (next: { energy: number; tension: number }) => void;
+  spectrumMode?: boolean;
 };
 
-export function Field({ energy, tension, background, onChange }: FieldProps) {
+export function Field({ energy, tension, background, onChange, spectrumMode }: FieldProps) {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef(false);
 
@@ -59,7 +60,7 @@ export function Field({ energy, tension, background, onChange }: FieldProps) {
   return (
     <div
       ref={canvasRef}
-      className="field-canvas"
+      className={`field-canvas${spectrumMode ? " field-spectrum-active" : ""}`}
       style={{ background }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -70,6 +71,30 @@ export function Field({ energy, tension, background, onChange }: FieldProps) {
       <div className="field-axis-label field-axis-bottom">Soft</div>
       <div className="field-axis-label field-axis-left">Calm</div>
       <div className="field-axis-label field-axis-right">Vivid</div>
+      {spectrumMode ? (
+        <div className="field-spectrum-indicator">
+          <svg viewBox="0 0 100 100" className="field-spectrum-wheel">
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              fill="none"
+              stroke="url(#spectrum-gradient)"
+              strokeWidth="4"
+              opacity="0.6"
+            />
+            <defs>
+              <linearGradient id="spectrum-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="oklch(70% 0.15 0)" />
+                <stop offset="25%" stopColor="oklch(70% 0.15 90)" />
+                <stop offset="50%" stopColor="oklch(70% 0.15 180)" />
+                <stop offset="75%" stopColor="oklch(70% 0.15 270)" />
+                <stop offset="100%" stopColor="oklch(70% 0.15 360)" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      ) : null}
       <div className="field-dot" style={markerStyle} />
     </div>
   );

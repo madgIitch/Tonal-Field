@@ -4,6 +4,7 @@ import { clamp } from "./oklch";
 export type Controls = {
   energy: number;
   tension: number;
+  hueBase?: number;
 };
 
 export type Metrics = {
@@ -22,8 +23,6 @@ export type PairResult = {
   metrics: Metrics;
 };
 
-const BASE_HUE = 220;
-
 const lerp = (start: number, end: number, amount: number) =>
   start + (end - start) * amount;
 
@@ -34,20 +33,26 @@ const hueDistance = (a: number, b: number) => {
   return diff > 180 ? 360 - diff : diff;
 };
 
-export function generatePair({ energy, tension }: Controls): PairResult {
+export function generatePair({ energy, tension, hueBase }: Controls): PairResult {
   const energyNormalized = clamp(energy, 0, 100) / 100;
   const tensionNormalized = clamp(tension, 0, 100) / 100;
 
-  const hueDiff =
-    lerp(12, 120, tensionNormalized) + lerp(0, 16, energyNormalized);
+  const autoHue =
+    lerp(20, 340, energyNormalized) + lerp(-40, 40, tensionNormalized);
+  const baseHue = normalizeHue(hueBase ?? autoHue);
+  const hueDiff = clamp(
+    lerp(16, 170, tensionNormalized) + lerp(0, 18, energyNormalized),
+    8,
+    180
+  );
   const lightnessDelta =
     lerp(0.08, 0.38, tensionNormalized) + lerp(0, 0.05, energyNormalized);
   const baseLightness = lerp(0.92, 0.62, energyNormalized);
   const baseChroma = lerp(0.03, 0.18, energyNormalized);
   const accentBoost = lerp(0.01, 0.08, tensionNormalized);
 
-  const hueA = normalizeHue(BASE_HUE - hueDiff / 2);
-  const hueB = normalizeHue(BASE_HUE + hueDiff / 2);
+  const hueA = normalizeHue(baseHue - hueDiff / 2);
+  const hueB = normalizeHue(baseHue + hueDiff / 2);
 
   const lightnessA = clamp(baseLightness + lightnessDelta / 2, 0.05, 0.97);
   const lightnessB = clamp(baseLightness - lightnessDelta / 2, 0.05, 0.97);

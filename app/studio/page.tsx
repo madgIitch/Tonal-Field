@@ -7,7 +7,7 @@ import { Field } from "@/components/Field";
 import { Section } from "@/components/Section";
 import { Slider } from "@/components/Slider";
 import { generatePair } from "@/lib/color/model";
-import { buildPalette } from "@/lib/color/palette";
+import { buildPalette, buildExtendedPalette } from "@/lib/color/palette";
 import type { OKLCH } from "@/lib/color/oklch";
 import { clamp, fromRgb, toCss } from "@/lib/color/oklch";
 import {
@@ -19,11 +19,22 @@ import {
 } from "@/lib/color/contrast";
 import type { PaletteRole } from "@/lib/color/palette";
 import {
-  buildCssVariables,
-  buildHexTokens,
+  buildColorTokens,
+  buildCssVariablesExtended,
   buildJsonTokens,
+  buildMuiTheme,
+  buildPluginPayload,
   buildTailwindConfig,
+  buildMaterial3Json,
+  buildTonalCssVariables,
+  buildTonalTailwindConfig,
+  buildFigmaPlugin,
+  buildSketchPlugin,
+  buildVSCodeTheme,
+  buildAppleColorList,
 } from "@/lib/color/export";
+import type { TokenFormat } from "@/lib/color/export";
+import { STANDARD_TONES } from "@/lib/color/tonal";
 import { extractDominantColors } from "@/lib/color/extract";
 
 const formatOklch = (color: OKLCH) =>
@@ -57,6 +68,14 @@ const PREVIEW_ROLES: PaletteRole[] = [
   "text",
 ];
 
+const TOKEN_FORMATS: { id: TokenFormat; label: string }[] = [
+  { id: "hex", label: "HEX" },
+  { id: "oklch", label: "OKLCH" },
+  { id: "rgb", label: "RGB" },
+  { id: "hsl", label: "HSL" },
+  { id: "lch", label: "LCH" },
+];
+
 const PRESETS = [
   { id: "calm-sage", name: "Calm Sage", energy: 18, tension: 12 },
   { id: "soft-sand", name: "Soft Sand", energy: 28, tension: 22 },
@@ -65,16 +84,6 @@ const PRESETS = [
   { id: "sharp-ink", name: "Sharp Ink", energy: 62, tension: 78 },
   { id: "neon-dusk", name: "Neon Dusk", energy: 80, tension: 68 },
 ];
-
-const PRESET_SWATCHES = PRESETS.map((preset) => {
-  const pair = generatePair({ energy: preset.energy, tension: preset.tension });
-  return {
-    ...preset,
-    gradient: `linear-gradient(135deg, ${toCss(pair.a)} 0 50%, ${toCss(
-      pair.b
-    )} 50% 100%)`,
-  };
-});
 
 const mapExtractedToRoles = (colors: OKLCH[]) => {
   if (!colors.length) {
@@ -120,15 +129,31 @@ const generateFromSeed = (seed: number) => {
   return {
     energy: Math.round(rng() * 100),
     tension: Math.round(rng() * 100),
+    hueBase: Math.round(rng() * 360),
   };
 };
 
-type ExportType = "css" | "json" | "tailwind";
+type ExportType =
+  | "css"
+  | "json"
+  | "tailwind"
+  | "mui"
+  | "plugin"
+  | "material3"
+  | "tonal-css"
+  | "tonal-tailwind"
+  | "figma"
+  | "sketch"
+  | "vscode"
+  | "apple-clr";
 
 type SavedPalette = {
   id: string;
   energy: number;
   tension: number;
+  hueBase?: number;
+  hueAuto?: boolean;
+  spectrumMode?: boolean;
   autoFix: boolean;
   createdAt: string;
 };
@@ -144,12 +169,18 @@ type PaletteDisplayItem = {
 export default function StudioPage() {
   const [energy, setEnergy] = useState(45);
   const [tension, setTension] = useState(35);
+  const [hueBase, setHueBase] = useState(220);
+  const [hueAuto, setHueAuto] = useState(false);
+  const [spectrumMode, setSpectrumMode] = useState(false);
   const [autoFix, setAutoFix] = useState(true);
   const [isPro, setIsPro] = useState(false);
   const [savedPalettes, setSavedPalettes] = useState<SavedPalette[]>([]);
   const [exportType, setExportType] = useState<ExportType>("css");
+  const [tokenFormat, setTokenFormat] = useState<TokenFormat>("hex");
   const [copyNotice, setCopyNotice] = useState("");
-  const [copyScope, setCopyScope] = useState<"" | "export" | "share">("");
+  const [copyScope, setCopyScope] = useState<"" | "export" | "share" | "tokens">(
+    ""
+  );
   const [shareUrl, setShareUrl] = useState("");
   const [hasLoadedSeed, setHasLoadedSeed] = useState(false);
   const [hasLoadedStorage, setHasLoadedStorage] = useState(false);
@@ -160,6 +191,7 @@ export default function StudioPage() {
   const [extractedColors, setExtractedColors] = useState<OKLCH[]>([]);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState("");
+  const [showTonalPalettes, setShowTonalPalettes] = useState(false);
   const maxFreeSaves = 2;
   const storageKey = "tonal-field:saved";
 
@@ -167,6 +199,9 @@ export default function StudioPage() {
     const params = new URLSearchParams(window.location.search);
     const energyParam = params.get("e");
     const tensionParam = params.get("t");
+    const hueParam = params.get("h");
+    const hueAutoParam = params.get("ha");
+    const spectrumParam = params.get("sm");
     const autoFixSeed = params.get("af");
     const randomSeedParam = params.get("s");
 
@@ -182,6 +217,21 @@ export default function StudioPage() {
       if (!Number.isNaN(tensionSeed)) {
         setTension(clamp(tensionSeed, 0, 100));
       }
+    }
+
+    if (hueParam !== null) {
+      const hueSeed = Number(hueParam);
+      if (!Number.isNaN(hueSeed)) {
+        setHueBase(clamp(hueSeed, 0, 360));
+      }
+    }
+
+    if (hueAutoParam === "0" || hueAutoParam === "1") {
+      setHueAuto(hueAutoParam === "1");
+    }
+
+    if (spectrumParam === "0" || spectrumParam === "1") {
+      setSpectrumMode(spectrumParam === "1");
     }
 
     if (autoFixSeed === "0" || autoFixSeed === "1") {
@@ -227,20 +277,66 @@ export default function StudioPage() {
     const params = new URLSearchParams();
     params.set("e", String(Math.round(energy)));
     params.set("t", String(Math.round(tension)));
+    params.set("h", String(Math.round(hueBase)));
+    params.set("ha", hueAuto ? "1" : "0");
+    params.set("sm", spectrumMode ? "1" : "0");
     params.set("af", autoFix ? "1" : "0");
     params.set("s", String(seed));
     const query = params.toString();
     const nextUrl = `${window.location.pathname}?${query}`;
     window.history.replaceState(null, "", nextUrl);
     setShareUrl(`${window.location.origin}${nextUrl}`);
-  }, [autoFix, energy, hasLoadedSeed, tension, seed]);
+  }, [autoFix, energy, hasLoadedSeed, tension, seed, hueBase, hueAuto, spectrumMode]);
+
+  const resolveHueBase = useCallback(
+    (energyValue: number, tensionValue: number) => {
+      // If Spectrum mode is active, map Energy/Tension to hue wheel
+      if (spectrumMode) {
+        const x = clamp(energyValue, 0, 100) - 50;
+        const y = clamp(tensionValue, 0, 100) - 50;
+        if (Math.abs(x) + Math.abs(y) < 0.001) {
+          return hueBase;
+        }
+        const angle = Math.atan2(y, x);
+        return ((angle * 180) / Math.PI + 360) % 360;
+      }
+
+      // If Auto mode is active, let the model determine hue
+      if (hueAuto) {
+        return undefined;
+      }
+
+      // Otherwise use the manual hueBase value
+      return hueBase;
+    },
+    [hueBase, hueAuto, spectrumMode]
+  );
 
   const pair = useMemo(
-    () => generatePair({ energy, tension }),
-    [energy, tension]
+    () => generatePair({ energy, tension, hueBase: resolveHueBase(energy, tension) }),
+    [energy, tension, resolveHueBase]
+  );
+
+  const presetSwatches = useMemo(
+    () =>
+      PRESETS.map((preset) => {
+        const presetPair = generatePair({
+          energy: preset.energy,
+          tension: preset.tension,
+          hueBase: resolveHueBase(preset.energy, preset.tension),
+        });
+        return {
+          ...preset,
+          gradient: `linear-gradient(135deg, ${toCss(presetPair.a)} 0 50%, ${toCss(
+            presetPair.b
+          )} 50% 100%)`,
+        };
+      }),
+    [resolveHueBase]
   );
 
   const basePalette = useMemo(() => buildPalette(pair), [pair]);
+  const extendedPalette = useMemo(() => buildExtendedPalette(pair), [pair]);
   const paletteSeed = useMemo(() => {
     const next = { ...basePalette };
     (Object.entries(locks) as [PaletteRole, OKLCH][]).forEach(([role, color]) => {
@@ -329,23 +425,46 @@ export default function StudioPage() {
   }, [isPro, locks, palette]);
 
   const exportRoles = isPro ? FULL_ROLES : PREVIEW_ROLES;
-  const hexTokens = useMemo(
-    () => buildHexTokens(palette, exportRoles),
-    [exportRoles, palette]
+  const colorTokens = useMemo(
+    () => buildColorTokens(palette, exportRoles, tokenFormat),
+    [exportRoles, palette, tokenFormat]
+  );
+  const tokenCopyText = useMemo(
+    () =>
+      colorTokens.map((token) => `${token.label}: ${token.value}`).join("\n"),
+    [colorTokens]
   );
 
   const exportContent = useMemo(() => {
     switch (exportType) {
       case "css":
-        return buildCssVariables(palette, FULL_ROLES);
+        return buildCssVariablesExtended(palette, FULL_ROLES);
       case "json":
         return buildJsonTokens(palette, FULL_ROLES);
       case "tailwind":
         return buildTailwindConfig(palette, FULL_ROLES);
+      case "mui":
+        return buildMuiTheme(palette);
+      case "plugin":
+        return buildPluginPayload(palette, FULL_ROLES);
+      case "material3":
+        return buildMaterial3Json(extendedPalette);
+      case "tonal-css":
+        return buildTonalCssVariables(extendedPalette.tonal);
+      case "tonal-tailwind":
+        return buildTonalTailwindConfig(extendedPalette.tonal);
+      case "figma":
+        return buildFigmaPlugin(extendedPalette);
+      case "sketch":
+        return buildSketchPlugin(palette, FULL_ROLES);
+      case "vscode":
+        return buildVSCodeTheme(extendedPalette);
+      case "apple-clr":
+        return buildAppleColorList(palette, FULL_ROLES);
       default:
-        return buildCssVariables(palette, FULL_ROLES);
+        return buildCssVariablesExtended(palette, FULL_ROLES);
     }
-  }, [exportType, palette]);
+  }, [exportType, palette, extendedPalette]);
 
   const savedCount = savedPalettes.length;
   const canSave = isPro || savedCount < maxFreeSaves;
@@ -359,6 +478,9 @@ export default function StudioPage() {
       id: `${Date.now()}`,
       energy,
       tension,
+      hueBase,
+      hueAuto,
+      spectrumMode,
       autoFix,
       createdAt: new Date().toISOString(),
     };
@@ -370,6 +492,7 @@ export default function StudioPage() {
     const next = generateFromSeed(seed);
     setEnergy(next.energy);
     setTension(next.tension);
+    setHueBase(next.hueBase);
     setSeed((value) => Math.max(0, Math.round(value + 1)));
   }, [seed]);
 
@@ -452,6 +575,15 @@ export default function StudioPage() {
   const handleLoad = (entry: SavedPalette) => {
     setEnergy(entry.energy);
     setTension(entry.tension);
+    if (typeof entry.hueBase === "number") {
+      setHueBase(entry.hueBase);
+    }
+    if (typeof entry.hueAuto === "boolean") {
+      setHueAuto(entry.hueAuto);
+    }
+    if (typeof entry.spectrumMode === "boolean") {
+      setSpectrumMode(entry.spectrumMode);
+    }
     setAutoFix(entry.autoFix);
   };
 
@@ -462,7 +594,7 @@ export default function StudioPage() {
   const handleCopy = async (
     text: string,
     notice: string,
-    scope: "export" | "share"
+    scope: "export" | "share" | "tokens"
   ) => {
     if (!navigator.clipboard) {
       setCopyScope(scope);
@@ -482,6 +614,52 @@ export default function StudioPage() {
       setCopyScope(scope);
       setCopyNotice("Copy failed");
     }
+  };
+
+  const handleDownload = () => {
+    const filename = (() => {
+      switch (exportType) {
+        case "css":
+        case "tonal-css":
+          return "tonal-field.css";
+        case "json":
+        case "material3":
+        case "plugin":
+          return "tonal-field.json";
+        case "tailwind":
+        case "tonal-tailwind":
+          return "tailwind.config.js";
+        case "mui":
+          return "theme.ts";
+        case "figma":
+          return "tonal-field-figma.json";
+        case "sketch":
+          return "tonal-field.sketch.json";
+        case "vscode":
+          return "tonal-field-theme.json";
+        case "apple-clr":
+          return "tonal-field.clr.json";
+        default:
+          return "tonal-field.txt";
+      }
+    })();
+
+    const blob = new Blob([exportContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    setCopyScope("export");
+    setCopyNotice("Downloaded");
+    window.setTimeout(() => {
+      setCopyNotice("");
+      setCopyScope("");
+    }, 1500);
   };
 
   const lockedRoles = useMemo(() => Object.keys(locks) as PaletteRole[], [locks]);
@@ -562,6 +740,7 @@ export default function StudioPage() {
         const nextPair = generatePair({
           energy: nextEnergy,
           tension: nextTension,
+          hueBase: resolveHueBase(nextEnergy, nextTension),
         });
 
         return {
@@ -574,7 +753,7 @@ export default function StudioPage() {
         };
       })
     );
-  }, [energy, tension]);
+  }, [energy, tension, resolveHueBase]);
 
   return (
     <Frame>
@@ -636,6 +815,52 @@ export default function StudioPage() {
                   maxLabel="Sharp"
                   onChange={setTension}
                 />
+                <Slider
+                  label="Hue base"
+                  description={
+                    hueAuto
+                      ? "Auto mode (driven by Energy/Tension)"
+                      : spectrumMode
+                      ? "Overridden by Spectrum mode"
+                      : "Manual anchor 0 to 360"
+                  }
+                  value={hueBase}
+                  min={0}
+                  max={360}
+                  step={1}
+                  minLabel="0"
+                  maxLabel="360"
+                  onChange={setHueBase}
+                  disabled={hueAuto || spectrumMode}
+                />
+                <label className="toggle">
+                  <input
+                    type="checkbox"
+                    checked={hueAuto}
+                    onChange={(event) => {
+                      const isAuto = event.target.checked;
+                      setHueAuto(isAuto);
+                      if (isAuto) {
+                        setSpectrumMode(false);
+                      }
+                    }}
+                  />
+                  <span>Auto (let Energy/Tension drive hue)</span>
+                </label>
+                <label className="toggle">
+                  <input
+                    type="checkbox"
+                    checked={spectrumMode}
+                    onChange={(event) => {
+                      const isSpectrum = event.target.checked;
+                      setSpectrumMode(isSpectrum);
+                      if (isSpectrum) {
+                        setHueAuto(false);
+                      }
+                    }}
+                  />
+                  <span>Spectrum mode (map field to full hue wheel)</span>
+                </label>
               </div>
               <div className="preset-block">
                 <div className="preset-header">
@@ -643,7 +868,7 @@ export default function StudioPage() {
                   <div className="preset-note">Popular moods</div>
                 </div>
                 <div className="preset-grid">
-                  {PRESET_SWATCHES.map((preset) => {
+                  {presetSwatches.map((preset) => {
                     const isActive =
                       preset.energy === energy && preset.tension === tension;
                     return (
@@ -743,6 +968,11 @@ export default function StudioPage() {
                   <div className="field-values">
                     <span>Energy {energy}</span>
                     <span>Tension {tension}</span>
+                    <span>
+                      Hue {Math.round(resolveHueBase(energy, tension) ?? 0)}
+                    </span>
+                    {hueAuto ? <span>Auto</span> : null}
+                    {spectrumMode ? <span>Spectrum</span> : null}
                   </div>
                 </div>
                 <Field
@@ -753,6 +983,7 @@ export default function StudioPage() {
                     setEnergy(nextEnergy);
                     setTension(nextTension);
                   }}
+                  spectrumMode={spectrumMode}
                 />
                 <div className="variation-grid">
                   {variations.map((variant) => (
@@ -815,6 +1046,65 @@ export default function StudioPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Material Design 3 Tonal Palettes Section */}
+              <div className="tonal-palettes-section" style={{ marginTop: "32px" }}>
+                <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>Tonal Palettes (Material Design 3)</span>
+                  <button
+                    type="button"
+                    className="shuffle-btn"
+                    style={{ fontSize: "12px", padding: "4px 12px" }}
+                    onClick={() => setShowTonalPalettes(!showTonalPalettes)}
+                  >
+                    {showTonalPalettes ? "Hide" : "Show"}
+                  </button>
+                </div>
+                {showTonalPalettes && extendedPalette.tonal ? (
+                  <div style={{ display: "grid", gap: "24px", marginTop: "16px" }}>
+                    {Object.entries(extendedPalette.tonal).map(([paletteName, tones]) => (
+                      <div key={paletteName} className="tonal-palette-row">
+                        <div className="tonal-palette-label" style={{
+                          fontSize: "13px",
+                          fontWeight: 600,
+                          marginBottom: "8px",
+                          textTransform: "capitalize"
+                        }}>
+                          {paletteName}
+                        </div>
+                        <div style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fit, minmax(60px, 1fr))",
+                          gap: "4px"
+                        }}>
+                          {STANDARD_TONES.map((tone) => {
+                            const color = tones[tone];
+                            if (!color) return null;
+                            return (
+                              <div
+                                key={tone}
+                                style={{
+                                  background: toCss(color),
+                                  color: tone <= 50 ? "white" : "black",
+                                  padding: "12px 8px",
+                                  borderRadius: "6px",
+                                  fontSize: "11px",
+                                  textAlign: "center",
+                                  fontWeight: 500,
+                                  border: "1px solid rgba(0,0,0,0.1)",
+                                }}
+                              >
+                                {tone}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
               <div className="palette-preview">
                 <div className="panel-title">Usage preview</div>
                 <div
@@ -954,17 +1244,45 @@ export default function StudioPage() {
                   ))}
                 </div>
               </div>
-              <div className="export" id="export">
-                <div className="panel-title">Export</div>
-                <div className="export-block">
-                  <div className="export-title">HEX tokens</div>
+                <div className="export" id="export">
+                  <div className="panel-title">Export</div>
+                  <div className="export-block">
+                  <div className="export-title">Tokens</div>
+                  <div className="export-options">
+                    {TOKEN_FORMATS.map((format) => (
+                      <button
+                        key={format.id}
+                        className={`export-btn${
+                          tokenFormat === format.id ? " export-active" : ""
+                        }`}
+                        type="button"
+                        onClick={() => setTokenFormat(format.id)}
+                      >
+                        {format.label}
+                      </button>
+                    ))}
+                  </div>
                   <div className="export-grid">
-                    {hexTokens.map((token) => (
+                    {colorTokens.map((token) => (
                       <div key={token.role} className="export-token">
                         <span>{token.label}</span>
                         <span>{token.value}</span>
                       </div>
                     ))}
+                  </div>
+                  <div className="export-toolbar">
+                    <button
+                      className="copy-btn"
+                      type="button"
+                      onClick={() =>
+                        handleCopy(tokenCopyText, "Tokens copied", "tokens")
+                      }
+                    >
+                      Copy tokens
+                    </button>
+                    {copyNotice && copyScope === "tokens" ? (
+                      <span className="copy-status">{copyNotice}</span>
+                    ) : null}
                   </div>
                 </div>
                 <div className={`export-block${isPro ? "" : " export-locked"}`}>
@@ -994,6 +1312,88 @@ export default function StudioPage() {
                     >
                       Tailwind config
                     </button>
+                    <button
+                      className={`export-btn${exportType === "mui" ? " export-active" : ""}`}
+                      type="button"
+                      disabled={!isPro}
+                      onClick={() => setExportType("mui")}
+                    >
+                      Material UI
+                    </button>
+                    <button
+                      className={`export-btn${exportType === "plugin" ? " export-active" : ""}`}
+                      type="button"
+                      disabled={!isPro}
+                      onClick={() => setExportType("plugin")}
+                    >
+                      Plugin JSON
+                    </button>
+                  </div>
+                  <div className="export-title" style={{ marginTop: "20px" }}>
+                    Material Design 3 (Tonal Palettes)
+                  </div>
+                  <div className="export-options">
+                    <button
+                      className={`export-btn${exportType === "material3" ? " export-active" : ""}`}
+                      type="button"
+                      disabled={!isPro}
+                      onClick={() => setExportType("material3")}
+                    >
+                      Material 3 JSON
+                    </button>
+                    <button
+                      className={`export-btn${exportType === "tonal-css" ? " export-active" : ""}`}
+                      type="button"
+                      disabled={!isPro}
+                      onClick={() => setExportType("tonal-css")}
+                    >
+                      Tonal CSS
+                    </button>
+                    <button
+                      className={`export-btn${exportType === "tonal-tailwind" ? " export-active" : ""}`}
+                      type="button"
+                      disabled={!isPro}
+                      onClick={() => setExportType("tonal-tailwind")}
+                    >
+                      Tonal Tailwind
+                    </button>
+                  </div>
+                  <div className="export-title" style={{ marginTop: "20px" }}>
+                    Design Tools (Plugins)
+                  </div>
+                  <div className="export-options">
+                    <button
+                      className={`export-btn${exportType === "figma" ? " export-active" : ""}`}
+                      type="button"
+                      disabled={!isPro}
+                      onClick={() => setExportType("figma")}
+                    >
+                      Figma
+                    </button>
+                    <button
+                      className={`export-btn${exportType === "sketch" ? " export-active" : ""}`}
+                      type="button"
+                      disabled={!isPro}
+                      onClick={() => setExportType("sketch")}
+                    >
+                      Sketch
+                    </button>
+                    <button
+                      className={`export-btn${exportType === "vscode" ? " export-active" : ""}`}
+                      type="button"
+                      disabled={!isPro}
+                      onClick={() => setExportType("vscode")}
+                    >
+                      VS Code
+                    </button>
+                    <button
+                      className={`export-btn${exportType === "apple-clr" ? " export-active" : ""}`}
+                      type="button"
+                      disabled={!isPro}
+                      onClick={() => setExportType("apple-clr")}
+                    >
+                      Apple .clr
+                    </button>
                   </div>
                   {isPro ? (
                     <div className="export-code">
@@ -1007,6 +1407,14 @@ export default function StudioPage() {
                           }
                         >
                           Copy
+                        </button>
+                        <button
+                          className="copy-btn"
+                          type="button"
+                          onClick={handleDownload}
+                          style={{ marginLeft: "8px" }}
+                        >
+                          Download
                         </button>
                         {copyNotice && copyScope === "export" ? (
                           <span className="copy-status">{copyNotice}</span>
@@ -1085,6 +1493,10 @@ export default function StudioPage() {
                         <div className="saved-meta">
                           <span>
                             Energy {item.energy} / Tension {item.tension}
+                            {typeof item.hueBase === "number"
+                              ? ` / Hue ${Math.round(item.hueBase)}`
+                              : ""}
+                            {item.spectrumMode ? " / Spectrum" : ""}
                           </span>
                           <span>{item.autoFix ? "Auto-fix" : "No fix"}</span>
                         </div>

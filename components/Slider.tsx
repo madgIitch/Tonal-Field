@@ -9,6 +9,7 @@ type SliderProps = {
   step?: number;
   minLabel?: string;
   maxLabel?: string;
+  disabled?: boolean;
   onChange: (value: number) => void;
 };
 
@@ -21,6 +22,7 @@ export function Slider({
   step = 1,
   minLabel,
   maxLabel,
+  disabled = false,
   onChange,
 }: SliderProps) {
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -28,7 +30,7 @@ export function Slider({
   };
 
   return (
-    <div className="slider">
+    <div className={`slider${disabled ? " slider-disabled" : ""}`}>
       <div className="slider-header">
         <div>
           <div className="slider-label">{label}</div>
@@ -47,6 +49,7 @@ export function Slider({
         value={value}
         onChange={handleChange}
         aria-label={label}
+        disabled={disabled}
       />
       <div className="slider-scale">
         <span>{minLabel ?? min}</span>

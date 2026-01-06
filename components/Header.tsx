@@ -4,6 +4,12 @@ export function Header() {
   return (
     <header className="header">
       <div className="logo-group">
+        <img
+          src="/icon.png"
+          alt=""
+          aria-hidden
+          style={{ width: "24px", height: "24px", flexShrink: 0 }}
+        />
         <Link className="logo" href="/">
           Tonal Field
         </Link>

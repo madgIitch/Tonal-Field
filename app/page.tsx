@@ -7,7 +7,16 @@ export default function Home() {
       <div className="page">
         <section className="hero reveal" id="top">
           <div className="hero-copy">
-            <span className="eyebrow">Tonal Field</span>
+            <span className="eyebrow eyebrow-with-icon">
+              <img
+                src="/icon.png"
+                alt=""
+                aria-hidden
+                className="eyebrow-icon"
+              />
+              <span>Tonal Field</span>
+            </span>
+
             <h1 className="hero-title">Explore color as a continuous space</h1>
             <p className="hero-text">
               Navigate a tonal field, shape Energy and Tension, and ship palettes

@@ -908,8 +908,9 @@ export default function StudioPage() {
           subtitle="Tune Energy and Tension to generate palette kits."
         >
           <div className="field-grid">
-            {/* Left Column: Controls */}
-            <div className="panel panel-controls">
+            {/* Column 1: Controls */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div className="panel panel-controls">
               <div className="panel-title">Energy + Tension</div>
               <div className="controls-toolbar">
                 <button
@@ -1141,11 +1142,12 @@ export default function StudioPage() {
                   </button>
                 </div>
               ) : null}
+              </div>
             </div>
 
-            {/* Center Column: Preview and Palette */}
+            {/* Column 2: Preview and Palette */}
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <div className="panel panel-preview">
+              <div className="panel panel-preview">
               <div className="panel-title">Palette Kit</div>
               <div className="field-block">
                 <div className="field-header">
@@ -1578,11 +1580,12 @@ export default function StudioPage() {
                 ) : null}
               </div>
             </div>
+            </div>
 
-            {/* Third Column: Dual Theme / Preview Mode */}
+            {/* Column 3: Dual Theme / Preview Mode */}
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div className="panel">
-              <div className="dual-theme-section">
+                <div className="dual-theme-section">
                 <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span>Dual Theme (Light/Dark)</span>
                   <button
@@ -1885,14 +1888,14 @@ export default function StudioPage() {
                     </div>
                   </div>
                 ) : null}
-              </div>
+                </div>
               </div>
             </div>
 
-            {/* Fourth Column: Metrics and Actions */}
+            {/* Column 4: Metrics and Actions */}
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div className="panel">
-              <div className="palette-preview">
+                <div className="palette-preview">
                 <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span>Usage preview</span>
                   {showDualTheme ? (
@@ -1964,10 +1967,10 @@ export default function StudioPage() {
                     </div>
                   ) : null}
                 </div>
-              </div>
+                </div>
               </div>
 
-            <div className="panel panel-metrics">
+              <div className="panel panel-metrics">
               <div className="panel-title">Metrics</div>
               <div className="metrics">
                 <div className="metric">
@@ -2317,7 +2320,6 @@ export default function StudioPage() {
                   <div className="saved-empty">No saved palettes yet.</div>
                 )}
               </div>
-            </div>
             </div>
             </div>
           </div>

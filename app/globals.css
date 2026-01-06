@@ -94,10 +94,12 @@ body {
   color: inherit;
 }
 
-.frame {
-  max-width: 1200px;
+.frame{
+  max-width: 1600px; /* o 1800px si quieres 4 cols cómodas */
   margin: 0 auto;
+  padding: 0 16px;   /* y quita el padding duplicado del field-grid */
 }
+
 
 .section {
   background: color-mix(in oklch, var(--surface), white 40%);
@@ -450,14 +452,16 @@ body {
   }
 }
 
-.field-grid {
+.field-grid{
   display: grid;
-  gap: 14px;
-  grid-template-columns: 340px 1fr 360px 320px;
+  gap: 12px;
+  grid-template-columns: 300px 1fr 320px 280px;
   max-width: 100%;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0; /* antes 0 16px */
+  align-items: start;
 }
+
 
 .panel {
   background: var(--surface);
@@ -469,6 +473,10 @@ body {
   flex-direction: column;
   gap: 12px;
 }
+
+.field-grid > div{ min-width: 0; }
+.panel{ min-width: 0; }
+.export-pre{ max-width: 100%; overflow: auto; }
 
 .panel-title {
   font-size: 12px;
@@ -1379,15 +1387,17 @@ body {
 /* Large screens: maximize width */
 @media (min-width: 1800px) {
   .field-grid {
-    grid-template-columns: 380px 1fr 400px 360px;
-    max-width: 2000px;
+    grid-template-columns: 340px 1fr 360px 320px;
+    max-width: 1900px;
+    gap: 14px;
   }
 }
 
 /* Medium-large screens */
 @media (min-width: 1400px) and (max-width: 1799px) {
   .field-grid {
-    grid-template-columns: 360px 1fr 380px 340px;
+    grid-template-columns: 320px 1fr 340px 300px;
+    gap: 13px;
   }
 }
 

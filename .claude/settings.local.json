@@ -7,7 +7,13 @@
       "Bash(do echo \"$f\")",
       "Bash(done)",
       "Bash(do mv \"$f\" \"color-design-doc.pdf\")",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node -e:*)",
+      "Bash(timeout 60 npm run build)",
+      "Bash(cat:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9)"
     ]
   }
 }

@@ -149,7 +149,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
         {/* Features */}
         <div style={{ marginBottom: "24px" }}>
           <div style={{ fontSize: "14px", fontWeight: 600, marginBottom: "12px" }}>
-            What's included:
+            What&apos;s included:
           </div>
           <ul style={{ fontSize: "14px", lineHeight: 1.8, paddingLeft: "20px" }}>
             <li>Complete palette kits (all roles)</li>

@@ -455,13 +455,168 @@ Publicar un MVP sólido y presentable.
 
 ---
 
+---
+
+## 📊 Evaluación Estratégica vs Coolors (estado actual)
+
+### Matriz Comparativa
+
+| Aspecto                | Coolors | Tonal Field | Ventaja |
+| ---------------------- | ------- | ----------- | ------- |
+| **Entrada rápida**     | ✅      | ⚠️ mejora  | Coolors |
+| **Control real**       | ❌      | ✅          | TF      |
+| **Sistema de color**   | ❌      | ✅          | TF      |
+| **Accesibilidad**      | ❌      | ✅          | TF      |
+| **Comunidad**          | Pasiva  | Activa      | TF      |
+| **Dev friendliness**   | Media   | Alta        | TF      |
+| **Diferenciación**     | Baja    | Muy alta    | TF      |
+
+### Estado actual
+
+**Lo que ya ganáis:**
+
+* Field 2D como diferencial real
+* Energy/Tension como modelo propio
+* Roles, dual theme, accesibilidad a nivel enterprise
+* Exports developer-grade
+* Comunidad educativa (no solo galerías)
+
+**Lo que necesita mejora:**
+
+* Claridad de entrada (percepción de complejidad)
+* Jerarquía visual (demasiadas cosas a la vez)
+* Ritmo cognitivo (hacer las primeras 30 segundos aún más claros)
+
+### Veredicto
+
+**No estáis "por detrás de Coolors". Estáis en el punto clásico de productos más inteligentes que accesibles.**
+
+---
+
+## 🎯 Recomendación: Foco en Sprints 1-7 + mejora UX
+
+### Prioridad inmediata (próximas 4 semanas)
+
+**No añadir features nuevas. Optimizar percepción.**
+
+1. **Sprint 5 (Free/Pro)** — Aclarar el modelo de valor
+2. **Sprint 7 (Polish)** — Mejorar entrada y jerarquía visual
+3. **Mejora UX Studio** — Introducir progresivamente características (Explore → Refine → Ship)
+
+### Mejora UX Studio: Tres modos conceptuales
+
+#### Explore (default)
+
+Visible:
+
+* Field interactivo
+* Energy/Tension sliders
+* Shuffle
+* Snapshot de kit
+
+Oculto/colapsado:
+
+* Métricas
+* Accesibilidad avanzada
+* Dual theme
+* Export
+
+**Objetivo:** Jugar y entender sin fricción.
+
+#### Refine (cuando el usuario es serio)
+
+Se abre cuando toca:
+
+* Roles individuales
+* Dual theme
+* Contraste
+* Métricas detalladas
+
+**Objetivo:** Ajustar con criterio.
+
+#### Ship (Pro)
+
+* Export
+* Tokens
+* Framework configs
+* Integración API
+
+**Objetivo:** Llevarlo a producción.
+
+**Nota técnica:** No requiere backend nuevo, solo:
+
+* Colapsar secciones
+* Priorizar visualmente
+* Guiar progresivamente
+
+---
+
+## 📝 Narrative Positioning por Sección
+
+### Home
+
+**Estado:** MUY BIEN
+
+**Cambio sugerido:**
+
+* Snapshot debería insinuar interacción (mini-field con punto movable o animación Energy/Tension → resultado)
+
+### System
+
+**Estado:** BIEN, pero documentación-heavy
+
+**Cambio sugerido:**
+
+* Reducir a 3 bloques máximos:
+  1. Continuous field
+  2. Energy & Tension
+  3. System output
+* El resto → colapsado / "Learn more"
+
+**Por qué:** Coolors no explica teoría, vende efecto. Vosotros vendéis criterio, pero sin saturar.
+
+### Community
+
+**Estado:** Galería bonita, pero no se siente "comunidad"
+
+**Cambio sugerido:**
+
+* Mostrar autoría
+* CTA claras: "Use this palette" / "Open in Studio"
+* Feedback visible: saves > likes, forks > likes
+* **Positioning:** Comunidad pedagógica, no social
+  > "Aprende por qué esta paleta funciona"
+
+### Studio
+
+**Estado:** Potente pero abrumador en primera vista
+
+**Cambio sugerido:**
+
+* Implementar progresión Explore → Refine → Ship
+* Destacar Field como diferencial visual
+* Ocultar accesibilidad/métricas por defecto
+* Mostrar valor de Pro claramente (no intrusivo)
+
+### Pricing
+
+**Estado:** Muy bien resuelto
+
+**Cambio sugerido:**
+
+* Destacar 1 beneficio principal Pro:
+  > "Export systems, not colors"
+
+---
+
 ### Nota final
 
 Este MVP:
 
-* No es un “color picker”
+* No es un "color picker"
 * Es un **marco conceptual + herramienta práctica**
 * Está preparado para crecer (AI, teams, presets, comparación)
+* **Estratégicamente:** Ya vence a Coolors en profundidad. Próximo paso es mejorar accesibilidad/claridad.
 
 Si quieres, el siguiente paso lógico sería:
 

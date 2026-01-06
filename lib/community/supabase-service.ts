@@ -271,6 +271,7 @@ export async function filterPalettes(
 ): Promise<CommunityPalette[]> {
   const supabase = createClient();
 
+  // Build base query
   let query = supabase
     .from("palettes")
     .select(`
@@ -283,31 +284,19 @@ export async function filterPalettes(
     `)
     .eq("is_public", true);
 
-  // Filter by mood tags
-  if (options.mood && options.mood.length > 0) {
-    query = query.contains("tags->mood", options.mood);
-  }
-
-  // Filter by style tags
-  if (options.style && options.style.length > 0) {
-    query = query.contains("tags->style", options.style);
-  }
-
-  // Search by name or description
+  // Apply search filter at database level
   if (options.search) {
     query = query.or(
       `name.ilike.%${options.search}%,description.ilike.%${options.search}%`
     );
   }
 
-  // Sort
+  // Apply sorting
   switch (options.sortBy) {
     case "popular":
       query = query.order("likes_count", { ascending: false });
       break;
     case "trending":
-      // For trending, we could use a more complex query
-      // For now, sort by combination of likes and views
       query = query.order("likes_count", { ascending: false });
       break;
     case "recent":
@@ -323,7 +312,8 @@ export async function filterPalettes(
     return [];
   }
 
-  return data.map((p) => ({
+  // Map data to CommunityPalette format
+  let palettes = data.map((p) => ({
     id: p.id,
     name: p.name,
     description: p.description || undefined,
@@ -342,6 +332,23 @@ export async function filterPalettes(
     createdAt: p.created_at,
     updatedAt: p.updated_at,
   }));
+
+  // Apply client-side tag filtering (more reliable than JSONB queries)
+  if (options.mood && options.mood.length > 0) {
+    palettes = palettes.filter((p) => {
+      const paletteMoods = p.tags.mood || [];
+      return options.mood!.some((mood) => paletteMoods.includes(mood));
+    });
+  }
+
+  if (options.style && options.style.length > 0) {
+    palettes = palettes.filter((p) => {
+      const paletteStyles = p.tags.style || [];
+      return options.style!.some((style) => paletteStyles.includes(style));
+    });
+  }
+
+  return palettes;
 }
 
 // Get user's saved palettes

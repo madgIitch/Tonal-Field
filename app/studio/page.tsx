@@ -967,27 +967,6 @@ export default function StudioPage() {
                 >
                   💾 Export & Share
                 </button>
-                <div className="seed-field">
-                  <label className="seed-label" htmlFor="seed-input">
-                    Seed
-                  </label>
-                  <input
-                    id="seed-input"
-                    className="seed-input"
-                    type="number"
-                    min={0}
-                    value={seed}
-                    onChange={(event) => {
-                      const nextSeed = Number(event.target.value);
-                      setSeed(
-                        Number.isNaN(nextSeed)
-                          ? 0
-                          : Math.max(0, Math.round(nextSeed))
-                      );
-                    }}
-                  />
-                </div>
-                <div className="seed-hint">Same seed = same result.</div>
               </div>
               <div className="controls">
                 <Slider

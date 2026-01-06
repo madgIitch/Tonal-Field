@@ -237,6 +237,7 @@ export default function StudioPage() {
   const [showHierarchy, setShowHierarchy] = useState(false);
   const [showDualTheme, setShowDualTheme] = useState(true);
   const [previewMode, setPreviewMode] = useState<ThemeMode>("light");
+  const [showExportPanel, setShowExportPanel] = useState(false);
   const maxFreeSaves = 2;
   const storageKey = "tonal-field:saved";
 
@@ -957,6 +958,14 @@ export default function StudioPage() {
                   style={{ marginLeft: "8px", background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.3)" }}
                 >
                   📤 Publish
+                </button>
+                <button
+                  type="button"
+                  className="shuffle-btn"
+                  onClick={() => setShowExportPanel(true)}
+                  style={{ marginLeft: "8px", background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.3)" }}
+                >
+                  💾 Export & Share
                 </button>
                 <div className="seed-field">
                   <label className="seed-label" htmlFor="seed-input">
@@ -2070,6 +2079,23 @@ export default function StudioPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Export & Share Modal */}
+              {showExportPanel && (
+                <>
+                  <div className="modal-overlay" onClick={() => setShowExportPanel(false)} />
+                  <div className="modal-panel export-modal">
+                    <div className="modal-header">
+                      <h2 className="modal-title">Export & Share</h2>
+                      <button
+                        type="button"
+                        className="modal-close"
+                        onClick={() => setShowExportPanel(false)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="modal-body">
                 <div className="export" id="export">
                   <div className="panel-title">Export</div>
                   <div className="export-block">
@@ -2276,6 +2302,11 @@ export default function StudioPage() {
                   ) : null}
                 </div>
               </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
               <div className="plan">
                 <div className="panel-title">Plan</div>
                 <div className="plan-row">

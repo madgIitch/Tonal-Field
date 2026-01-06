@@ -16,7 +16,12 @@
       "Bash(xargs kill -9)",
       "Bash(npm run dev:*)",
       "Bash(npm install:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(scoop bucket add:*)",
+      "Bash(scoop install:*)",
+      "Bash(supabase --version:*)",
+      "Bash(supabase login:*)",
+      "Bash(supabase functions deploy:*)"
     ]
   }
 }

@@ -48,6 +48,7 @@ import type { MoodTag, StyleTag } from "@/lib/community/types";
 import { MOOD_TAGS, STYLE_TAGS } from "@/lib/community/types";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import type { KitSize } from "@/lib/color/hierarchy";
+import { UpgradeModal } from "@/components/UpgradeModal";
 import {
   getRolesForSize,
   getHierarchyForSize,
@@ -203,13 +204,14 @@ type PaletteDisplayItem = {
 
 export default function StudioPage() {
   const { user, profile } = useAuth();
+  const isPro = profile?.plan === "pro";
   const [energy, setEnergy] = useState(45);
   const [tension, setTension] = useState(35);
   const [hueBase, setHueBase] = useState(220);
   const [hueAuto, setHueAuto] = useState(false);
   const [spectrumMode, setSpectrumMode] = useState(false);
   const [autoFix, setAutoFix] = useState(true);
-  const [isPro, setIsPro] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [savedPalettes, setSavedPalettes] = useState<SavedPalette[]>([]);
   const [exportType, setExportType] = useState<ExportType>("css");
   const [tokenFormat, setTokenFormat] = useState<TokenFormat>("hex");
@@ -683,7 +685,7 @@ export default function StudioPage() {
   };
 
   const handleUpgrade = () => {
-    setIsPro(true);
+    setShowUpgradeModal(true);
   };
 
   const handleLoad = (entry: SavedPalette) => {
@@ -2565,6 +2567,12 @@ export default function StudioPage() {
           </div>
         </div>
       ) : null}
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+      />
     </Frame>
   );
 }

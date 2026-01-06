@@ -14,11 +14,15 @@ import {
   getUserInteraction,
   trackView,
 } from "@/lib/community/supabase-service";
+import { useAuth } from "@/lib/auth/AuthProvider";
+import { AuthModal } from "@/components/AuthModal";
 
 const swatchText = (color: OKLCH) =>
   color.l > 0.6 ? "oklch(20% 0.02 90)" : "oklch(98% 0.02 90)";
 
 export default function CommunityPage() {
+  const { user, loading: authLoading } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [palettes, setPalettes] = useState<CommunityPalette[]>([]);
   const [selectedMoods, setSelectedMoods] = useState<MoodTag[]>([]);
   const [selectedStyles, setSelectedStyles] = useState<StyleTag[]>([]);
@@ -28,6 +32,13 @@ export default function CommunityPage() {
     new Map()
   );
   const [loading, setLoading] = useState(true);
+
+  // Check authentication on mount
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setShowAuthModal(true);
+    }
+  }, [user, authLoading]);
 
   // Load palettes on mount
   useEffect(() => {
@@ -109,6 +120,57 @@ export default function CommunityPage() {
   };
 
   const hasFilters = selectedMoods.length > 0 || selectedStyles.length > 0 || searchQuery;
+
+  // Show auth modal if user is not logged in
+  if (!authLoading && !user) {
+    return (
+      <Frame>
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          defaultMode="signup"
+        />
+        <div className="page-container">
+          <Section
+            title="Community Gallery"
+            subtitle="Join Tonal Field to explore and share beautiful color palettes"
+          >
+            <div style={{
+              textAlign: "center",
+              padding: "80px 20px",
+              maxWidth: "600px",
+              margin: "0 auto"
+            }}>
+              <div style={{ fontSize: "64px", marginBottom: "24px" }}>🎨</div>
+              <h2 style={{ fontSize: "28px", fontWeight: 600, marginBottom: "16px" }}>
+                Join the Community
+              </h2>
+              <p style={{ fontSize: "16px", lineHeight: 1.6, marginBottom: "32px", opacity: 0.8 }}>
+                Sign up to explore palettes created by designers, save your favorites,
+                share your own color systems, and connect with the Tonal Field community.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(true)}
+                style={{
+                  padding: "14px 32px",
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  border: "none",
+                  borderRadius: "8px",
+                  background: "rgb(59, 130, 246)",
+                  color: "white",
+                  cursor: "pointer",
+                }}
+              >
+                Sign Up to Continue
+              </button>
+            </div>
+          </Section>
+        </div>
+      </Frame>
+    );
+  }
 
   return (
     <Frame>

@@ -15,12 +15,17 @@ export default function PricingPage() {
           <div className="pricing-grid">
             <div className="pricing-card">
               <div className="pricing-title">Free</div>
-              <div className="pricing-price">Core exploration</div>
+              <div className="pricing-price">€0</div>
+              <div style={{ fontSize: "14px", opacity: 0.7, marginBottom: "20px" }}>
+                Core exploration
+              </div>
               <ul className="pricing-list">
                 <li>Live field and sliders</li>
+                <li>Community access</li>
                 <li>Preview palette roles</li>
                 <li>Basic auto-fix</li>
-                <li>Limited saves and HEX export</li>
+                <li>Up to 5 saved palettes</li>
+                <li>HEX export</li>
               </ul>
               <div className="pricing-footer">
                 <span>Good for exploration</span>
@@ -29,12 +34,21 @@ export default function PricingPage() {
             </div>
             <div className="pricing-card pro">
               <div className="pricing-title">Pro</div>
-              <div className="pricing-price">Full system output</div>
+              <div className="pricing-price">
+                €2<span style={{ fontSize: "16px", opacity: 0.7 }}>/month</span>
+              </div>
+              <div style={{ fontSize: "14px", opacity: 0.7, marginBottom: "20px" }}>
+                or €20/year (save €4)
+              </div>
               <ul className="pricing-list">
+                <li>Everything in Free, plus:</li>
                 <li>Complete palette kits</li>
                 <li>Advanced contrast repair</li>
-                <li>Unlimited saves</li>
+                <li>Unlimited saved palettes</li>
+                <li>Dual theme generator</li>
+                <li>Color blindness simulator</li>
                 <li>CSS, JSON, Tailwind exports</li>
+                <li>Figma, Sketch, VS Code exports</li>
               </ul>
               <div className="pricing-footer">
                 <span>Best for production teams</span>

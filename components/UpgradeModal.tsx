@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { createCheckoutSession, STRIPE_PRICES } from "@/lib/stripe/stripe-service";
+import "./UpgradeModal.css";
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -46,112 +47,47 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   };
 
   return (
-    <div
-      className="modal-overlay"
-      onClick={onClose}
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "rgba(0, 0, 0, 0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-      }}
-    >
-      <div
-        className="modal-content"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "white",
-          borderRadius: "16px",
-          padding: "32px",
-          maxWidth: "500px",
-          width: "90%",
-          maxHeight: "90vh",
-          overflow: "auto",
-        }}
-      >
-        <div style={{ marginBottom: "24px" }}>
-          <h2 style={{ fontSize: "24px", fontWeight: 600, marginBottom: "8px" }}>
-            Upgrade to Pro
-          </h2>
-          <p style={{ fontSize: "14px", opacity: 0.7 }}>
+    <div className="upgrade-modal-overlay" onClick={onClose}>
+      <div className="upgrade-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="upgrade-modal-header">
+          <h2 className="upgrade-modal-title">Upgrade to Pro</h2>
+          <p className="upgrade-modal-subtitle">
             Unlock advanced features for professional color design
           </p>
         </div>
 
         {/* Plan Selection */}
-        <div style={{ marginBottom: "24px" }}>
+        <div className="upgrade-plan-selection">
           <div
             onClick={() => setSelectedPlan("yearly")}
-            style={{
-              border: selectedPlan === "yearly" ? "2px solid rgb(59, 130, 246)" : "2px solid #e5e7eb",
-              borderRadius: "12px",
-              padding: "20px",
-              marginBottom: "12px",
-              cursor: "pointer",
-              position: "relative",
-            }}
+            className={`upgrade-plan-option ${selectedPlan === "yearly" ? "selected" : ""}`}
           >
             {selectedPlan === "yearly" && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "12px",
-                  right: "12px",
-                  background: "rgb(59, 130, 246)",
-                  color: "white",
-                  padding: "4px 12px",
-                  borderRadius: "6px",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                }}
-              >
-                SAVE €4
-              </div>
+              <div className="upgrade-plan-badge">SAVE €4</div>
             )}
-            <div style={{ fontWeight: 600, fontSize: "18px", marginBottom: "4px" }}>
-              Yearly
+            <div className="upgrade-plan-name">Yearly</div>
+            <div className="upgrade-plan-price">
+              €20<span className="upgrade-plan-price-unit">/year</span>
             </div>
-            <div style={{ fontSize: "24px", fontWeight: 700, marginBottom: "4px" }}>
-              €20<span style={{ fontSize: "16px", fontWeight: 400, opacity: 0.7 }}>/year</span>
-            </div>
-            <div style={{ fontSize: "14px", opacity: 0.7 }}>
-              €1.67/month billed annually
-            </div>
+            <div className="upgrade-plan-billing">€1.67/month billed annually</div>
           </div>
 
           <div
             onClick={() => setSelectedPlan("monthly")}
-            style={{
-              border: selectedPlan === "monthly" ? "2px solid rgb(59, 130, 246)" : "2px solid #e5e7eb",
-              borderRadius: "12px",
-              padding: "20px",
-              cursor: "pointer",
-            }}
+            className={`upgrade-plan-option ${selectedPlan === "monthly" ? "selected" : ""}`}
           >
-            <div style={{ fontWeight: 600, fontSize: "18px", marginBottom: "4px" }}>
-              Monthly
+            <div className="upgrade-plan-name">Monthly</div>
+            <div className="upgrade-plan-price">
+              €2<span className="upgrade-plan-price-unit">/month</span>
             </div>
-            <div style={{ fontSize: "24px", fontWeight: 700, marginBottom: "4px" }}>
-              €2<span style={{ fontSize: "16px", fontWeight: 400, opacity: 0.7 }}>/month</span>
-            </div>
-            <div style={{ fontSize: "14px", opacity: 0.7 }}>
-              Billed monthly
-            </div>
+            <div className="upgrade-plan-billing">Billed monthly</div>
           </div>
         </div>
 
         {/* Features */}
-        <div style={{ marginBottom: "24px" }}>
-          <div style={{ fontSize: "14px", fontWeight: 600, marginBottom: "12px" }}>
-            What&apos;s included:
-          </div>
-          <ul style={{ fontSize: "14px", lineHeight: 1.8, paddingLeft: "20px" }}>
+        <div className="upgrade-features">
+          <div className="upgrade-features-title">What&apos;s included:</div>
+          <ul className="upgrade-features-list">
             <li>Complete palette kits (all roles)</li>
             <li>Advanced contrast repair</li>
             <li>Unlimited saved palettes</li>
@@ -162,22 +98,12 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
         </div>
 
         {/* Actions */}
-        <div style={{ display: "flex", gap: "12px" }}>
+        <div className="upgrade-modal-actions">
           <button
             type="button"
             onClick={onClose}
             disabled={loading}
-            style={{
-              flex: 1,
-              padding: "12px",
-              fontSize: "14px",
-              fontWeight: 600,
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-              background: "white",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.5 : 1,
-            }}
+            className="upgrade-btn upgrade-btn-cancel"
           >
             Cancel
           </button>
@@ -185,24 +111,13 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             type="button"
             onClick={handleUpgrade}
             disabled={loading}
-            style={{
-              flex: 1,
-              padding: "12px",
-              fontSize: "14px",
-              fontWeight: 600,
-              border: "none",
-              borderRadius: "8px",
-              background: "rgb(59, 130, 246)",
-              color: "white",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.5 : 1,
-            }}
+            className="upgrade-btn upgrade-btn-primary"
           >
             {loading ? "Loading..." : "Continue to Payment"}
           </button>
         </div>
 
-        <div style={{ marginTop: "16px", fontSize: "12px", opacity: 0.6, textAlign: "center" }}>
+        <div className="upgrade-modal-footer">
           Secure payment powered by Stripe
         </div>
       </div>

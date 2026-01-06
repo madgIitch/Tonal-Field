@@ -1,0 +1,237 @@
+/* UpgradeModal - Fixed styles independent of user palette */
+
+.upgrade-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.upgrade-modal-content {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.upgrade-modal-header {
+  margin-bottom: 24px;
+}
+
+.upgrade-modal-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1a1a1a;
+}
+
+.upgrade-modal-subtitle {
+  font-size: 14px;
+  opacity: 0.7;
+  color: #374151;
+}
+
+.upgrade-plan-selection {
+  margin-bottom: 24px;
+}
+
+.upgrade-plan-option {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  background: #ffffff;
+}
+
+.upgrade-plan-option:hover {
+  border-color: #3b82f6;
+}
+
+.upgrade-plan-option.selected {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.upgrade-plan-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #3b82f6;
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.upgrade-plan-name {
+  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 4px;
+  color: #1a1a1a;
+}
+
+.upgrade-plan-price {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #1a1a1a;
+}
+
+.upgrade-plan-price-unit {
+  font-size: 16px;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.upgrade-plan-billing {
+  font-size: 14px;
+  opacity: 0.7;
+  color: #6b7280;
+}
+
+.upgrade-features {
+  margin-bottom: 24px;
+}
+
+.upgrade-features-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #1a1a1a;
+}
+
+.upgrade-features-list {
+  font-size: 14px;
+  line-height: 1.8;
+  padding-left: 20px;
+  color: #374151;
+}
+
+.upgrade-features-list li {
+  margin-bottom: 4px;
+}
+
+.upgrade-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.upgrade-btn {
+  flex: 1;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.upgrade-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.upgrade-btn-cancel {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+}
+
+.upgrade-btn-cancel:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.upgrade-btn-primary {
+  border: none;
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.upgrade-btn-primary:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.upgrade-modal-footer {
+  margin-top: 16px;
+  font-size: 12px;
+  opacity: 0.6;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .upgrade-modal-content {
+    background: #1f2937;
+  }
+
+  .upgrade-modal-title {
+    color: #f9fafb;
+  }
+
+  .upgrade-modal-subtitle {
+    color: #d1d5db;
+  }
+
+  .upgrade-plan-option {
+    background: #374151;
+    border-color: #4b5563;
+  }
+
+  .upgrade-plan-option:hover {
+    border-color: #3b82f6;
+  }
+
+  .upgrade-plan-option.selected {
+    background: #1e3a5f;
+    border-color: #3b82f6;
+  }
+
+  .upgrade-plan-name,
+  .upgrade-plan-price {
+    color: #f9fafb;
+  }
+
+  .upgrade-plan-billing {
+    color: #9ca3af;
+  }
+
+  .upgrade-features-title {
+    color: #f9fafb;
+  }
+
+  .upgrade-features-list {
+    color: #d1d5db;
+  }
+
+  .upgrade-btn-cancel {
+    background: #374151;
+    border-color: #4b5563;
+    color: #d1d5db;
+  }
+
+  .upgrade-btn-cancel:hover:not(:disabled) {
+    background: #4b5563;
+  }
+
+  .upgrade-modal-footer {
+    color: #9ca3af;
+  }
+}

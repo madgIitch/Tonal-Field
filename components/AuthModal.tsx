@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import "./AuthModal.css";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -68,114 +69,119 @@ export function AuthModal({ isOpen, onClose, defaultMode = "login" }: AuthModalP
   };
 
   return (
-    <>
-      <div className="modal-overlay" onClick={onClose} />
-      <div className="modal-panel auth-modal">
-        <div className="modal-header">
-          <h2 className="modal-title">
+    <div className="auth-modal-overlay" onClick={onClose}>
+      <div className="auth-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="auth-modal-header">
+          <h2 className="auth-modal-title">
             {mode === "login" ? "Login" : "Create Account"}
           </h2>
           <button
             type="button"
-            className="modal-close"
+            className="auth-modal-close"
             onClick={onClose}
           >
             ✕
           </button>
         </div>
-        <div className="modal-body">
-          <form onSubmit={handleSubmit} className="auth-form">
-            {mode === "signup" && (
-              <div className="form-field">
-                <label htmlFor="name">Name (optional)</label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                  disabled={loading}
-                />
-              </div>
-            )}
 
-            <div className="form-field">
-              <label htmlFor="email">Email</label>
+        <form onSubmit={handleSubmit} className="auth-modal-form">
+          {mode === "signup" && (
+            <div className="auth-modal-field">
+              <label htmlFor="name" className="auth-modal-label">
+                Name (optional)
+              </label>
               <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
                 disabled={loading}
+                className="auth-modal-input"
               />
             </div>
+          )}
 
-            <div className="form-field">
-              <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                minLength={6}
-                disabled={loading}
-              />
-              {mode === "signup" && (
-                <span className="form-hint">At least 6 characters</span>
-              )}
-            </div>
-
-            {error && <div className="auth-error">{error}</div>}
-            {message && <div className="auth-success">{message}</div>}
-
-            <button
-              type="submit"
-              className="btn-primary auth-submit"
+          <div className="auth-modal-field">
+            <label htmlFor="email" className="auth-modal-label">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
               disabled={loading}
-            >
-              {loading ? "Loading..." : mode === "login" ? "Login" : "Sign Up"}
-            </button>
+              className="auth-modal-input"
+            />
+          </div>
 
-            <div className="auth-switch">
-              {mode === "login" ? (
-                <>
-                  Don&apos;t have an account?{" "}
-                  <button
-                    type="button"
-                    className="auth-link"
-                    onClick={() => {
-                      setMode("signup");
-                      setError("");
-                      setMessage("");
-                    }}
-                  >
-                    Sign up
-                  </button>
-                </>
-              ) : (
-                <>
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    className="auth-link"
-                    onClick={() => {
-                      setMode("login");
-                      setError("");
-                      setMessage("");
-                    }}
-                  >
-                    Login
-                  </button>
-                </>
-              )}
-            </div>
-          </form>
-        </div>
+          <div className="auth-modal-field">
+            <label htmlFor="password" className="auth-modal-label">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              minLength={6}
+              disabled={loading}
+              className="auth-modal-input"
+            />
+            {mode === "signup" && (
+              <span className="auth-modal-helper">At least 6 characters</span>
+            )}
+          </div>
+
+          {error && <div className="auth-modal-error">{error}</div>}
+          {message && <div className="auth-modal-success">{message}</div>}
+
+          <button
+            type="submit"
+            className="auth-modal-submit"
+            disabled={loading}
+          >
+            {loading ? "Loading..." : mode === "login" ? "Login" : "Sign Up"}
+          </button>
+
+          <div className="auth-modal-footer">
+            {mode === "login" ? (
+              <>
+                Don&apos;t have an account?{" "}
+                <span
+                  className="auth-modal-link"
+                  onClick={() => {
+                    setMode("signup");
+                    setError("");
+                    setMessage("");
+                  }}
+                >
+                  Sign up
+                </span>
+              </>
+            ) : (
+              <>
+                Already have an account?{" "}
+                <span
+                  className="auth-modal-link"
+                  onClick={() => {
+                    setMode("login");
+                    setError("");
+                    setMessage("");
+                  }}
+                >
+                  Login
+                </span>
+              </>
+            )}
+          </div>
+        </form>
       </div>
-    </>
+    </div>
   );
 }

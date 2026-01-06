@@ -67,6 +67,7 @@ import {
   buildDualThemeReactNative,
 } from "@/lib/color/export";
 
+
 const formatOklch = (color: OKLCH) =>
   `oklch(${Math.round(color.l * 100)}% ${color.c.toFixed(3)} ${Math.round(
     color.h
@@ -163,6 +164,9 @@ const generateFromSeed = (seed: number) => {
   };
 };
 
+
+
+
 type ExportType =
   | "css"
   | "json"
@@ -235,6 +239,8 @@ export default function StudioPage() {
   const [previewMode, setPreviewMode] = useState<ThemeMode>("light");
   const maxFreeSaves = 2;
   const storageKey = "tonal-field:saved";
+
+  
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -471,6 +477,21 @@ export default function StudioPage() {
   const activePalette = useMemo(() => {
     return getPaletteForMode(dualTheme, previewMode);
   }, [dualTheme, previewMode]);
+
+  const themeVars = useMemo(() => {
+  const p = activePalette; // o palette (la final ya auto-fixeada)
+  const primaryText = pickTextColor(p.primary).color;
+
+  return {
+    "--tf-bg": toCss(p.background),
+    "--tf-surface": toCss(p.surface),
+    "--tf-text": toCss(p.text),
+    "--tf-muted": toCss(p.muted),
+    "--tf-primary": toCss(p.primary),
+    "--tf-accent": toCss(p.accent),
+    "--tf-primaryText": toCss(primaryText),
+  } as React.CSSProperties;
+}, [activePalette]);
 
   const paletteStyles = useMemo(
     () => ({
@@ -900,7 +921,7 @@ export default function StudioPage() {
 
   return (
     <Frame>
-      <div className="page">
+      <div className="page" style={themeVars}>
         <Section
           id="field"
           className="reveal"

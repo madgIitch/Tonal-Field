@@ -1,9 +1,20 @@
-:root {
-  --bg: oklch(98% 0.02 90);
-  --surface: oklch(96% 0.03 90);
-  --text: oklch(15% 0.02 90);
-  --accent: oklch(70% 0.15 200);
+:root{
+  /* valores por defecto (fallback) */
+  --tf-bg: oklch(98% 0.02 90);
+  --tf-surface: oklch(96% 0.03 90);
+  --tf-text: oklch(15% 0.02 90);
+  --tf-muted: oklch(55% 0.02 90);
+  --tf-primary: oklch(70% 0.15 200);
+  --tf-accent: oklch(70% 0.15 200);
+  --tf-primaryText: oklch(98% 0.02 90);
+
+  /* Mapeo a las variables que ya usas */
+  --bg: var(--tf-bg);
+  --surface: var(--tf-surface);
+  --text: var(--tf-text);
+  --accent: var(--tf-primary);
 }
+
 
 html {
   scroll-behavior: smooth;

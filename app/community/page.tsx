@@ -316,6 +316,12 @@ export default function CommunityPage() {
                       <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "4px" }}>
                         {palette.name}
                       </h3>
+
+                      {/* Author info */}
+                      <div style={{ fontSize: "12px", opacity: 0.6, marginBottom: "8px" }}>
+                        by {palette.author.name}
+                      </div>
+
                       {palette.description ? (
                         <p
                           style={{

@@ -13,7 +13,8 @@
       "Bash(timeout 60 npm run build)",
       "Bash(cat:*)",
       "Bash(lsof:*)",
-      "Bash(xargs kill -9)"
+      "Bash(xargs kill -9)",
+      "Bash(npm run dev:*)"
     ]
   }
 }

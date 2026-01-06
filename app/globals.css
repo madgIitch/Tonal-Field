@@ -1477,6 +1477,56 @@ body {
   }
 }
 
+/* Studio Dynamic Theme Styles */
+/* When --tf-* variables are set, override default colors with generated palette */
+.page[style*="--tf-"] .section {
+  background: color-mix(in oklch, var(--tf-surface, var(--surface)), white 40%);
+  border-color: color-mix(in oklch, var(--tf-surface, var(--surface)), black 10%);
+}
+
+.page[style*="--tf-"] .btn-primary {
+  background: var(--tf-primary, var(--accent));
+  color: var(--tf-primaryText, oklch(98% 0.02 90));
+}
+
+.page[style*="--tf-"] .slider-input {
+  accent-color: var(--tf-accent, var(--accent));
+}
+
+.page[style*="--tf-"] .panel {
+  background: var(--tf-surface, var(--surface));
+  border-color: color-mix(in oklch, var(--tf-surface, var(--surface)), black 12%);
+}
+
+.page[style*="--tf-"] .field-canvas {
+  border-color: color-mix(in oklch, var(--tf-surface, var(--surface)), black 10%);
+}
+
+.page[style*="--tf-"] .field-dot {
+  background: color-mix(in oklch, var(--tf-text, var(--text)), white 20%);
+  border-color: color-mix(in oklch, var(--tf-surface, var(--surface)), white 60%);
+  box-shadow: 0 6px 14px color-mix(in oklch, var(--tf-text, var(--text)), transparent 80%);
+}
+
+.page[style*="--tf-"] .field-axis-label {
+  background: color-mix(in oklch, var(--tf-bg, white) 75%, transparent);
+  color: var(--tf-text, var(--text));
+}
+
+.page[style*="--tf-"] .export-tabs button {
+  background: color-mix(in oklch, var(--tf-surface, var(--surface)), black 10%);
+}
+
+.page[style*="--tf-"] .export-tabs button.active {
+  background: var(--tf-primary, var(--accent));
+  color: var(--tf-primaryText, oklch(98% 0.02 90));
+}
+
+.page[style*="--tf-"] .swatch-value {
+  background: color-mix(in oklch, var(--tf-bg, white) 75%, var(--tf-surface, var(--surface)));
+  color: var(--tf-text, var(--text));
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

@@ -493,6 +493,14 @@ export default function StudioPage() {
   } as React.CSSProperties;
 }, [activePalette]);
 
+  // Apply theme variables to document root for dynamic UI theming
+  useEffect(() => {
+    const root = document.documentElement;
+    Object.entries(themeVars).forEach(([key, value]) => {
+      root.style.setProperty(key, value as string);
+    });
+  }, [themeVars]);
+
   const paletteStyles = useMemo(
     () => ({
       background: toCss(activePalette.background),

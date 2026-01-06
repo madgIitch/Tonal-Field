@@ -43,9 +43,10 @@ import {
   type ColorBlindnessType,
   type PairAnalysis,
 } from "@/lib/color/accessibility";
-import { publishPalette } from "@/lib/community/service";
+import { publishPalette } from "@/lib/community/supabase-service";
 import type { MoodTag, StyleTag } from "@/lib/community/types";
 import { MOOD_TAGS, STYLE_TAGS } from "@/lib/community/types";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import type { KitSize } from "@/lib/color/hierarchy";
 import {
   getRolesForSize,
@@ -201,6 +202,7 @@ type PaletteDisplayItem = {
 };
 
 export default function StudioPage() {
+  const { user, profile } = useAuth();
   const [energy, setEnergy] = useState(45);
   const [tension, setTension] = useState(35);
   const [hueBase, setHueBase] = useState(220);
@@ -774,7 +776,13 @@ export default function StudioPage() {
     }, 1500);
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
+    // Check if user is logged in
+    if (!user) {
+      alert("Please login to publish palettes");
+      return;
+    }
+
     if (!publishName.trim()) {
       alert("Please enter a name for your palette");
       return;
@@ -786,7 +794,7 @@ export default function StudioPage() {
     }
 
     try {
-      publishPalette({
+      await publishPalette({
         name: publishName.trim(),
         description: publishDescription.trim() || undefined,
         palette: palette,
@@ -817,8 +825,8 @@ export default function StudioPage() {
         setCopyNotice("");
         setCopyScope("");
       }, 2000);
-    } catch (error) {
-      alert("Failed to publish palette. Please try again.");
+    } catch (error: any) {
+      alert(error.message || "Failed to publish palette. Please try again.");
       console.error(error);
     }
   };

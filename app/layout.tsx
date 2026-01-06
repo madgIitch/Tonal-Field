@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
+import { AuthProvider } from "@/lib/auth/AuthProvider";
 
 const plexSans = IBM_Plex_Sans({
   subsets: ["latin"],
@@ -28,8 +29,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className={`${plexSans.variable} ${spaceGrotesk.variable}`}>
-        <Header />
-        <main className="main">{children}</main>
+        <AuthProvider>
+          <Header />
+          <main className="main">{children}</main>
+        </AuthProvider>
       </body>
     </html>
   );

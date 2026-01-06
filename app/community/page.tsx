@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Frame } from "@/components/Frame";
 import { Section } from "@/components/Section";
 import { toCss } from "@/lib/color/oklch";
@@ -8,14 +8,12 @@ import type { OKLCH } from "@/lib/color/oklch";
 import type { CommunityPalette, FilterOptions, MoodTag, StyleTag } from "@/lib/community/types";
 import { MOOD_TAGS, STYLE_TAGS } from "@/lib/community/types";
 import {
-  getCommunityPalettes,
   filterPalettes,
   likePalette,
   savePalette as saveCommunityPalette,
   getUserInteraction,
   trackView,
-  seedDemoPalettes,
-} from "@/lib/community/service";
+} from "@/lib/community/supabase-service";
 
 const swatchText = (color: OKLCH) =>
   color.l > 0.6 ? "oklch(20% 0.02 90)" : "oklch(98% 0.02 90)";
@@ -29,14 +27,15 @@ export default function CommunityPage() {
   const [interactions, setInteractions] = useState<Map<string, { liked: boolean; saved: boolean }>>(
     new Map()
   );
+  const [loading, setLoading] = useState(true);
 
   // Load palettes on mount
   useEffect(() => {
-    seedDemoPalettes();
     loadPalettes();
   }, []);
 
-  const loadPalettes = () => {
+  const loadPalettes = async () => {
+    setLoading(true);
     const filters: FilterOptions = {
       mood: selectedMoods.length > 0 ? selectedMoods : undefined,
       style: selectedStyles.length > 0 ? selectedStyles : undefined,
@@ -44,21 +43,22 @@ export default function CommunityPage() {
       sortBy,
     };
 
-    const filtered = filterPalettes(filters);
+    const filtered = await filterPalettes(filters);
     setPalettes(filtered);
 
     // Load user interactions
     const interactionMap = new Map<string, { liked: boolean; saved: boolean }>();
-    filtered.forEach((p) => {
-      const interaction = getUserInteraction(p.id);
+    for (const p of filtered) {
+      const interaction = await getUserInteraction(p.id);
       if (interaction) {
         interactionMap.set(p.id, {
           liked: interaction.liked,
           saved: interaction.saved,
         });
       }
-    });
+    }
     setInteractions(interactionMap);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -77,13 +77,13 @@ export default function CommunityPage() {
     );
   };
 
-  const handleLike = (paletteId: string) => {
-    likePalette(paletteId);
+  const handleLike = async (paletteId: string) => {
+    await likePalette(paletteId);
     loadPalettes();
   };
 
-  const handleSave = (paletteId: string) => {
-    saveCommunityPalette(paletteId);
+  const handleSave = async (paletteId: string) => {
+    await saveCommunityPalette(paletteId);
     loadPalettes();
   };
 

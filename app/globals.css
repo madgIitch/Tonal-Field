@@ -1578,6 +1578,200 @@ body {
   }
 }
 
+/* Auth Modal Styles */
+.auth-modal {
+  width: 450px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-field input {
+  padding: 12px 16px;
+  border: 1px solid color-mix(in oklch, var(--surface), black 15%);
+  border-radius: 12px;
+  font-size: 14px;
+  background: var(--background);
+  color: var(--text);
+  transition: border-color 0.2s;
+}
+
+.form-field input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-field input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.form-hint {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.auth-error {
+  padding: 12px 16px;
+  background: oklch(95% 0.08 20);
+  color: oklch(40% 0.12 20);
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.auth-success {
+  padding: 12px 16px;
+  background: oklch(95% 0.06 140);
+  color: oklch(35% 0.10 140);
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.auth-submit {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.auth-switch {
+  text-align: center;
+  font-size: 14px;
+}
+
+.auth-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+}
+
+.auth-link:hover {
+  opacity: 0.8;
+}
+
+/* User Menu Styles */
+.user-menu-wrapper {
+  position: relative;
+}
+
+.user-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid color-mix(in oklch, var(--surface), black 15%);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.user-button:hover {
+  background: color-mix(in oklch, var(--surface), black 5%);
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.user-name {
+  font-size: 14px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: oklch(75% 0.15 280);
+  color: white;
+  letter-spacing: 0.05em;
+}
+
+.user-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  background: var(--surface);
+  border: 1px solid color-mix(in oklch, var(--surface), black 15%);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.user-menu-header {
+  padding: 16px;
+}
+
+.user-menu-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.user-menu-email {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+.user-menu-divider {
+  height: 1px;
+  background: color-mix(in oklch, var(--surface), black 10%);
+}
+
+.user-menu-item {
+  width: 100%;
+  padding: 12px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.user-menu-item:hover {
+  background: color-mix(in oklch, var(--surface), black 5%);
+}
+
 /* Studio Dynamic Theme Styles */
 /* When --tf-* variables are set, override default colors with generated palette */
 .page[style*="--tf-"] .section {

@@ -19,6 +19,9 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "Tonal Field",
   description: "Explore color as a continuous space",
+  verification: {
+    google: "WjfSwq-jwgf0c_5rcyxlV_fxb4SHCPpA0s9bpk5IIU4",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

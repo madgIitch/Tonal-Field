@@ -26,11 +26,21 @@ export async function createCheckoutSession(
   try {
     const supabase = createClient();
 
-    // Call Supabase Edge Function to create checkout session
+    // Get current session access token
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) {
+      return { url: null, error: "Not authenticated" };
+    }
+
+    // Call Supabase Edge Function to create checkout session, include auth header
     const { data, error } = await supabase.functions.invoke("create-checkout", {
       body: {
         priceId,
         userId,
+      },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
       },
     });
 
@@ -55,9 +65,18 @@ export async function createPortalSession(
   try {
     const supabase = createClient();
 
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) {
+      return { url: null, error: "Not authenticated" };
+    }
+
     const { data, error } = await supabase.functions.invoke("create-portal", {
       body: {
         customerId,
+      },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
       },
     });
 

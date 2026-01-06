@@ -19,6 +19,7 @@ export function Header() {
         <Link href="/">Home</Link>
         <Link href="/system">System</Link>
         <Link href="/studio">Studio</Link>
+        <Link href="/guides">Guides</Link>
         <Link href="/community">Community</Link>
         <Link href="/pricing">Plans</Link>
       </nav>

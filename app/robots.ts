@@ -1,44 +1,10 @@
-import type { MetadataRoute } from 'next';
-
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://tonal-field.vercel.app';
+import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
+  const base = "https://tonal-field.vercel.app";
+
   return {
-    rules: [
-      {
-        userAgent: '*',
-        allow: [
-          '/',
-          '/studio',
-          '/system',
-          '/community',
-          '/pricing',
-          '/guides/',
-          '/learn/',
-        ],
-        disallow: ['/admin', '/api/private'],
-      },
-      {
-        userAgent: 'GPTBot',
-        disallow: '/',
-      },
-      {
-        userAgent: 'ChatGPT-User',
-        disallow: '/',
-      },
-      {
-        userAgent: 'CCBot',
-        disallow: '/',
-      },
-      {
-        userAgent: 'anthropic-ai',
-        disallow: '/',
-      },
-      {
-        userAgent: 'Claude-Web',
-        disallow: '/',
-      },
-    ],
-    sitemap: `${BASE_URL}/sitemap.xml`,
+    rules: [{ userAgent: "*", allow: "/" }],
+    sitemap: `${base}/sitemap.xml`,
   };
 }

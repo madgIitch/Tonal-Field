@@ -18,6 +18,18 @@ export default function GuidesIndex() {
       icon: '🎯',
     },
     {
+      title: 'Design Tokens for Color Systems',
+      description: 'Build scalable color systems with design tokens. Export to CSS, Tailwind, JSON, and more platforms.',
+      href: '/guides/design-tokens',
+      icon: '🔧',
+    },
+    {
+      title: 'Coolors Alternative: Tool Comparison',
+      description: 'Compare professional color tools for design systems. Find the best Coolors alternative for production.',
+      href: '/guides/coolors-alternative',
+      icon: '⚖️',
+    },
+    {
       title: 'WCAG Contrast Guide',
       description: 'Understand WCAG 2.1 requirements. Learn AA vs AAA levels and how to ensure accessible color pairs.',
       href: '/guides/wcag-contrast',

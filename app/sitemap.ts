@@ -34,6 +34,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     },
+    {
+      url: `${BASE_URL}/guides`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.85,
+    },
     // Content Hub - SEO diferenciador vs Coolors
     {
       url: `${BASE_URL}/guides/color-systems`,
@@ -76,6 +82,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
       priority: 0.75,
+    },
+    {
+      url: `${BASE_URL}/guides/design-tokens`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/guides/coolors-alternative`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.85,
     },
   ];
 

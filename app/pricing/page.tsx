@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { Frame } from "@/components/Frame";
+import { SubscriptionManager } from "@/components/SubscriptionManager";
 
 export default function PricingPage() {
   return (
     <Frame>
       <div className="page">
+        <SubscriptionManager />
+
         <section className="pricing reveal" id="pricing">
           <div className="section-header">
             <h1 className="section-title">Free vs Pro</h1>

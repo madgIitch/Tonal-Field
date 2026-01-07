@@ -237,18 +237,27 @@ export function SubscriptionManager() {
         }
 
         .btn-secondary {
-          background: rgba(255, 255, 255, 0.1);
-          color: white;
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          background: #3b82f6;
+          color: #ffffff;
+          border: 2px solid #3b82f6;
+          padding: 12px 24px;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
         }
 
         .btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.15);
+          background: #2563eb;
+          border-color: #2563eb;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
         }
 
         .btn-secondary:disabled {
-          opacity: 0.5;
+          opacity: 0.6;
           cursor: not-allowed;
+          transform: none;
         }
       `}</style>
     </div>

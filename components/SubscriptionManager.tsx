@@ -23,11 +23,15 @@ export function SubscriptionManager() {
       const { data: { user: authUser } } = await supabase.auth.getUser();
 
       if (authUser) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", authUser.id)
           .single();
+
+        console.log("Profile data:", data);
+        console.log("Profile error:", error);
+        console.log("Has stripe_customer_id:", data?.stripe_customer_id);
 
         if (data) {
           setUser(data);

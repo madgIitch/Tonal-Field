@@ -108,18 +108,26 @@ export function SubscriptionManager() {
           )}
         </div>
 
-        {isPro && user.stripe_customer_id && (
+        {isPro && (
           <div className="subscription-actions">
-            <button
-              className="btn btn-secondary"
-              onClick={handleManageSubscription}
-              disabled={portalLoading}
-            >
-              {portalLoading ? "Opening..." : "Manage Subscription"}
-            </button>
-            <p className="subscription-hint">
-              Update payment method, view invoices, or cancel your subscription
-            </p>
+            {user.stripe_customer_id ? (
+              <>
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleManageSubscription}
+                  disabled={portalLoading}
+                >
+                  {portalLoading ? "Opening..." : "Manage Subscription"}
+                </button>
+                <p className="subscription-hint">
+                  Update payment method, view invoices, or cancel your subscription
+                </p>
+              </>
+            ) : (
+              <p className="subscription-hint error">
+                No Stripe customer ID found. Please contact support or re-subscribe.
+              </p>
+            )}
           </div>
         )}
 

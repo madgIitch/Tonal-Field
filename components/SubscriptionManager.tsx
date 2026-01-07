@@ -24,7 +24,7 @@ export function SubscriptionManager() {
 
       if (authUser) {
         const { data } = await supabase
-          .from("users")
+          .from("profiles")
           .select("*")
           .eq("id", authUser.id)
           .single();

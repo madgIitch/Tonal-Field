@@ -19,53 +19,40 @@ serve(async (req) => {
   }
 
   try {
-    // Get the authorization header (try both capitalization variants)
-    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+    // Create Supabase Admin client (bypasses RLS, uses service role)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    );
 
-    console.log("=== DEBUG ===");
-    console.log("All headers:", JSON.stringify([...req.headers.entries()]));
-    console.log("Auth header received:", authHeader ? "Present" : "Missing");
-    console.log("=============");
+    // Get authorization header from request
+    const authHeader = req.headers.get("Authorization");
 
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: "Missing authorization header" }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 401,
-        }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
       );
     }
 
-    // Create Supabase client with the Auth context of the request
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
-    );
+    // Extract JWT token from "Bearer <token>" format
+    const token = authHeader.replace("Bearer ", "");
 
-    // Verify user is authenticated
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseClient.auth.getUser();
+    // Verify the JWT token using Supabase Admin client
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
 
-    console.log("Auth result - User:", user?.id, "Error:", authError?.message);
+    console.log("=== AUTH DEBUG ===");
+    console.log("User ID:", user?.id);
+    console.log("Auth Error:", authError?.message);
+    console.log("==================");
 
     if (authError || !user) {
       return new Response(
         JSON.stringify({
           error: "Unauthorized",
-          details: authError?.message || "No user found"
+          details: authError?.message || "Invalid token"
         }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 401,
-        }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
       );
     }
 

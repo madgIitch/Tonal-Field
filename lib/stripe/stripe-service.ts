@@ -45,7 +45,7 @@ export async function createCheckoutSession(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "authorization": `Bearer ${accessToken}`,
+        "Authorization": `Bearer ${accessToken}`,
         "apikey": anonKey || "",
       },
       body: JSON.stringify({

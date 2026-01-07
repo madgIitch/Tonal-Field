@@ -29,24 +29,33 @@ export async function createCheckoutSession(
     // Get current session access token
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
     if (!accessToken) {
       return { url: null, error: "Not authenticated" };
     }
 
-    // Call Supabase Edge Function to create checkout session, include auth header
-    const { data, error } = await supabase.functions.invoke("create-checkout", {
-      body: {
+    // Use fetch directly to ensure headers are sent correctly
+    const functionUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-checkout`;
+
+    const response = await fetch(functionUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`,
+        "apikey": anonKey || "",
+      },
+      body: JSON.stringify({
         priceId,
         userId,
-      },
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      }),
     });
 
-    if (error) {
-      console.error("Error creating checkout session:", error);
-      return { url: null, error: error.message };
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Error creating checkout session:", data);
+      return { url: null, error: data.error || data.details || "Failed to create checkout" };
     }
 
     return { url: data.url };

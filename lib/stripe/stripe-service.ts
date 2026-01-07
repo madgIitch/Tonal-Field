@@ -38,11 +38,14 @@ export async function createCheckoutSession(
     // Use fetch directly to ensure headers are sent correctly
     const functionUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-checkout`;
 
+    console.log("Making request to:", functionUrl);
+    console.log("Access token:", accessToken ? "Present" : "Missing");
+
     const response = await fetch(functionUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${accessToken}`,
+        "authorization": `Bearer ${accessToken}`,
         "apikey": anonKey || "",
       },
       body: JSON.stringify({

@@ -19,10 +19,13 @@ serve(async (req) => {
   }
 
   try {
-    // Get the authorization header
-    const authHeader = req.headers.get("Authorization");
+    // Get the authorization header (try both capitalization variants)
+    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
 
+    console.log("=== DEBUG ===");
+    console.log("All headers:", JSON.stringify([...req.headers.entries()]));
     console.log("Auth header received:", authHeader ? "Present" : "Missing");
+    console.log("=============");
 
     if (!authHeader) {
       return new Response(

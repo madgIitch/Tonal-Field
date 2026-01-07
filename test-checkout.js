@@ -8,7 +8,7 @@ async function testCreateCheckout() {
   console.log("Testing create-checkout Edge Function...\n");
 
   const testData = {
-    priceId: "price_1SmhBWBHZMDyOB3jGyMTmEmt", // Monthly plan - €2/month
+    priceId: "price_1SmoEaBHZMDyOB3jxDrwp9V3", // Yearly plan - €20/year
     userId: "test-user-123",
   };
 

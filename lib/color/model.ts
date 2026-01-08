@@ -5,6 +5,7 @@ export type Controls = {
   energy: number;
   tension: number;
   hueBase?: number;
+  chromaOverride?: number; // For Spectrum Mode: override chroma calculation
 };
 
 export type Metrics = {
@@ -33,7 +34,7 @@ const hueDistance = (a: number, b: number) => {
   return diff > 180 ? 360 - diff : diff;
 };
 
-export function generatePair({ energy, tension, hueBase }: Controls): PairResult {
+export function generatePair({ energy, tension, hueBase, chromaOverride }: Controls): PairResult {
   const energyNormalized = clamp(energy, 0, 100) / 100;
   const tensionNormalized = clamp(tension, 0, 100) / 100;
 
@@ -48,7 +49,11 @@ export function generatePair({ energy, tension, hueBase }: Controls): PairResult
   const lightnessDelta =
     lerp(0.08, 0.38, tensionNormalized) + lerp(0, 0.05, energyNormalized);
   const baseLightness = lerp(0.92, 0.62, energyNormalized);
-  const baseChroma = lerp(0.00, 0.37, energyNormalized);
+
+  // Use chromaOverride if provided (Spectrum Mode), otherwise calculate from energy
+  const baseChroma = chromaOverride !== undefined
+    ? clamp(chromaOverride, 0, 0.37)
+    : lerp(0.00, 0.37, energyNormalized);
   const accentBoost = lerp(0.00, 0.12, tensionNormalized);
 
   const hueA = normalizeHue(baseHue - hueDiff / 2);

@@ -69,8 +69,8 @@ export function Field({ energy, tension, background, onChange, spectrumMode }: F
     >
       <div className="field-axis-label field-axis-top">Sharp</div>
       <div className="field-axis-label field-axis-bottom">Soft</div>
-      <div className="field-axis-label field-axis-left">Calm</div>
-      <div className="field-axis-label field-axis-right">Vivid</div>
+      <div className="field-axis-label field-axis-left">{spectrumMode ? "Red" : "Calm"}</div>
+      <div className="field-axis-label field-axis-right">{spectrumMode ? "Cyan" : "Vivid"}</div>
       {spectrumMode ? (
         <div className="field-spectrum-indicator">
           <svg viewBox="0 0 100 100" className="field-spectrum-wheel">

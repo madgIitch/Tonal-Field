@@ -210,6 +210,7 @@ export default function StudioPage() {
   const [hueBase, setHueBase] = useState(220);
   const [hueAuto, setHueAuto] = useState(false);
   const [spectrumMode, setSpectrumMode] = useState(false);
+  const [spectrumChroma, setSpectrumChroma] = useState(50); // 0-100, maps to 0-0.37
   const [autoFix, setAutoFix] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [savedPalettes, setSavedPalettes] = useState<SavedPalette[]>([]);
@@ -342,15 +343,11 @@ export default function StudioPage() {
 
   const resolveHueBase = useCallback(
     (energyValue: number, tensionValue: number) => {
-      // If Spectrum mode is active, map Energy/Tension to hue wheel
+      // If Spectrum mode is active, map horizontal position to hue (0-360°)
+      // Energy slider still controls saturation, Tension (Y-axis) controls contrast
       if (spectrumMode) {
-        const x = clamp(energyValue, 0, 100) - 50;
-        const y = clamp(tensionValue, 0, 100) - 50;
-        if (Math.abs(x) + Math.abs(y) < 0.001) {
-          return hueBase;
-        }
-        const angle = Math.atan2(y, x);
-        return ((angle * 180) / Math.PI + 360) % 360;
+        // Map energy (0-100) directly to hue (0-360)
+        return (clamp(energyValue, 0, 100) / 100) * 360;
       }
 
       // If Auto mode is active, let the model determine hue
@@ -365,8 +362,13 @@ export default function StudioPage() {
   );
 
   const pair = useMemo(
-    () => generatePair({ energy, tension, hueBase: resolveHueBase(energy, tension) }),
-    [energy, tension, resolveHueBase]
+    () => generatePair({
+      energy,
+      tension,
+      hueBase: resolveHueBase(energy, tension),
+      chromaOverride: spectrumMode ? (spectrumChroma / 100) * 0.37 : undefined,
+    }),
+    [energy, tension, resolveHueBase, spectrumMode, spectrumChroma]
   );
 
   const presetSwatches = useMemo(
@@ -1039,8 +1041,23 @@ export default function StudioPage() {
                       }
                     }}
                   />
-                  <span>Spectrum mode (map field to full hue wheel)</span>
+                  <span>Spectrum mode (explore full color wheel)</span>
                 </label>
+                {spectrumMode && (
+                  <div style={{ marginTop: "16px", paddingLeft: "24px" }}>
+                    <label style={{ fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "8px", color: "#666" }}>
+                      Saturation: {Math.round(spectrumChroma)}%
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={spectrumChroma}
+                      onChange={(e) => setSpectrumChroma(Number(e.target.value))}
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+                )}
                 <div style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px solid rgba(0,0,0,0.1)" }}>
                   <label style={{ fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "12px" }}>
                     Kit Size

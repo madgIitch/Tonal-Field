@@ -48,8 +48,8 @@ export function generatePair({ energy, tension, hueBase }: Controls): PairResult
   const lightnessDelta =
     lerp(0.08, 0.38, tensionNormalized) + lerp(0, 0.05, energyNormalized);
   const baseLightness = lerp(0.92, 0.62, energyNormalized);
-  const baseChroma = lerp(0.03, 0.18, energyNormalized);
-  const accentBoost = lerp(0.01, 0.08, tensionNormalized);
+  const baseChroma = lerp(0.00, 0.37, energyNormalized);
+  const accentBoost = lerp(0.00, 0.12, tensionNormalized);
 
   const hueA = normalizeHue(baseHue - hueDiff / 2);
   const hueB = normalizeHue(baseHue + hueDiff / 2);
@@ -57,8 +57,8 @@ export function generatePair({ energy, tension, hueBase }: Controls): PairResult
   const lightnessA = clamp(baseLightness + lightnessDelta / 2, 0.05, 0.97);
   const lightnessB = clamp(baseLightness - lightnessDelta / 2, 0.05, 0.97);
 
-  const chromaA = clamp(baseChroma + accentBoost * 0.7, 0, 0.4);
-  const chromaB = clamp(baseChroma - accentBoost * 0.3, 0, 0.4);
+  const chromaA = clamp(baseChroma + accentBoost * 0.7, 0, 0.37);
+  const chromaB = clamp(baseChroma - accentBoost * 0.3, 0, 0.37);
 
   const a: OKLCH = { l: lightnessA, c: chromaA, h: hueA };
   const b: OKLCH = { l: lightnessB, c: chromaB, h: hueB };
@@ -66,11 +66,11 @@ export function generatePair({ energy, tension, hueBase }: Controls): PairResult
   const chromaAvg = (chromaA + chromaB) / 2;
   const hueGap = hueDistance(hueA, hueB);
   const contrast = Math.abs(lightnessA - lightnessB);
-  const vibration = clamp((chromaAvg / 0.4) * (hueGap / 180), 0, 1);
+  const vibration = clamp((chromaAvg / 0.37) * (hueGap / 180), 0, 1);
   const lightnessAvg = (lightnessA + lightnessB) / 2;
 
   const energySignal = clamp(
-    0.6 * (chromaAvg / 0.4) + 0.4 * (1 - Math.abs(lightnessAvg - 0.7)),
+    0.6 * (chromaAvg / 0.37) + 0.4 * (1 - Math.abs(lightnessAvg - 0.7)),
     0,
     1
   );

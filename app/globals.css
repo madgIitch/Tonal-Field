@@ -621,9 +621,13 @@ body {
 
 .variation-swatch {
   position: relative;
+  border: none;
   border-radius: 12px;
+  cursor: pointer;
   height: 40px;
   overflow: hidden;
+  padding: 0;
+  width: 100%;
 }
 
 .variation-label {

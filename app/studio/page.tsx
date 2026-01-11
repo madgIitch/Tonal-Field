@@ -929,7 +929,7 @@ export default function StudioPage() {
         });
 
         return {
-          key: `${nextEnergy}-${nextTension}`,
+          key: `${xOffset}-${yOffset}`,
           energy: Math.round(nextEnergy),
           tension: Math.round(nextTension),
           gradient: `linear-gradient(135deg, ${toCss(nextPair.a)} 0 50%, ${toCss(
@@ -1218,15 +1218,20 @@ export default function StudioPage() {
                 />
                 <div className="variation-grid">
                   {variations.map((variant) => (
-                    <div
+                    <button
                       key={variant.key}
+                      type="button"
                       className="variation-swatch"
                       style={{ background: variant.gradient }}
+                      onClick={() => {
+                        setEnergy(variant.energy);
+                        setTension(variant.tension);
+                      }}
                     >
                       <span className="variation-label">
                         {variant.energy}/{variant.tension}
                       </span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>

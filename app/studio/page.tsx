@@ -940,6 +940,12 @@ export default function StudioPage() {
     );
   }, [energy, tension, resolveHueBase]);
 
+  const moodLabel = useMemo(() => {
+    const energyLabel = energy >= 67 ? "Vivid" : energy <= 33 ? "Calm" : "Balanced";
+    const tensionLabel = tension >= 67 ? "Sharp" : tension <= 33 ? "Soft" : "Clear";
+    return `${energyLabel} / ${tensionLabel}`;
+  }, [energy, tension]);
+
   return (
     <Frame>
       <div className="page" style={themeVars}>
@@ -1193,9 +1199,12 @@ export default function StudioPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div className="panel panel-preview">
               <div className="panel-title">Palette Kit</div>
-              <div className="field-block">
+              <div className="field-block field-block-hero">
                 <div className="field-header">
-                  <div className="field-title">Mood Field</div>
+                  <div className="field-heading">
+                    <div className="field-title">Mood Field</div>
+                    <div className="field-mood">{moodLabel}</div>
+                  </div>
                   <div className="field-values">
                     <span>Energy {energy}</span>
                     <span>Tension {tension}</span>
@@ -2001,21 +2010,19 @@ export default function StudioPage() {
                       </button>
                     </div>
                   </div>
-                  {!isPro ? (
-                    <div className="upgrade-overlay">
-                      <div>
-                        Unlock full kit previews and advanced exports with Pro.
-                      </div>
-                      <button
-                        type="button"
-                        className="upgrade-btn"
-                        onClick={handleUpgrade}
-                      >
-                        Upgrade
-                      </button>
-                    </div>
-                  ) : null}
                 </div>
+                {!isPro ? (
+                  <div className="preview-cta">
+                    <div>Unlock full kit previews and advanced exports with Pro.</div>
+                    <button
+                      type="button"
+                      className="upgrade-btn"
+                      onClick={handleUpgrade}
+                    >
+                      Upgrade
+                    </button>
+                  </div>
+                ) : null}
                 </div>
               </div>
 

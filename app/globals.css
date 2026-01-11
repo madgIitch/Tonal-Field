@@ -517,6 +517,32 @@ body {
   gap: 16px;
 }
 
+.field-block-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+}
+
+.field-block-hero::before {
+  content: "";
+  position: absolute;
+  inset: -20% -10%;
+  background:
+    radial-gradient(260px circle at 15% 10%,
+      color-mix(in oklch, var(--tf-primary, var(--accent)), white 35%),
+      transparent 70%),
+    radial-gradient(300px circle at 85% 80%,
+      color-mix(in oklch, var(--tf-accent, var(--accent)), white 30%),
+      transparent 72%);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.field-block-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
 .field-header {
   display: flex;
   justify-content: space-between;
@@ -524,8 +550,20 @@ body {
   gap: 12px;
 }
 
+.field-heading {
+  display: grid;
+  gap: 4px;
+}
+
 .field-title {
   font-weight: 600;
+}
+
+.field-mood {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.7;
 }
 
 .field-values {
@@ -544,6 +582,7 @@ body {
   border: 1px solid color-mix(in oklch, var(--surface), black 10%);
   overflow: hidden;
   touch-action: none;
+  transition: background 350ms ease, box-shadow 350ms ease;
 }
 
 .field-dot {
@@ -555,6 +594,7 @@ body {
   border: 2px solid color-mix(in oklch, var(--surface), white 60%);
   transform: translate(-50%, -50%);
   box-shadow: 0 6px 14px color-mix(in oklch, var(--text), transparent 80%);
+  transition: top 140ms ease, left 140ms ease, box-shadow 200ms ease;
 }
 
 .field-axis-label {
@@ -628,6 +668,13 @@ body {
   overflow: hidden;
   padding: 0;
   width: 100%;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.variation-swatch:hover,
+.variation-swatch:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 18px color-mix(in oklch, var(--text), transparent 86%);
 }
 
 .variation-label {
@@ -644,6 +691,14 @@ body {
 .controls {
   display: grid;
   gap: 20px;
+}
+
+.panel button:focus-visible,
+.panel input:focus-visible,
+.panel textarea:focus-visible,
+.panel select:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--accent), white 35%);
+  outline-offset: 2px;
 }
 
 .controls-toolbar {
@@ -984,24 +1039,11 @@ body {
   position: relative;
   border-radius: 16px;
   padding: 16px;
+  transition: background 300ms ease, color 300ms ease;
 }
 
 .preview-locked {
   filter: saturate(0.8);
-}
-
-.upgrade-overlay {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-content: center;
-  gap: 12px;
-  text-align: center;
-  padding: 24px;
-  background: color-mix(in oklch, var(--surface), white 45%);
-  backdrop-filter: blur(6px);
-  font-size: 13px;
-  border-radius: inherit;
 }
 
 .upgrade-btn {
@@ -1014,6 +1056,26 @@ body {
   background: var(--accent);
   color: oklch(98% 0.02 90);
   cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.upgrade-btn:hover,
+.upgrade-btn:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px color-mix(in oklch, var(--accent), transparent 70%);
+}
+
+.preview-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  background: color-mix(in oklch, var(--surface), white 35%);
+  border: 1px solid color-mix(in oklch, var(--surface), black 10%);
 }
 
 .ui-card {
@@ -1022,6 +1084,12 @@ body {
   display: grid;
   gap: 10px;
   box-shadow: 0 12px 20px color-mix(in oklch, var(--text), transparent 90%);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.ui-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 28px color-mix(in oklch, var(--text), transparent 86%);
 }
 
 .ui-chip {
@@ -1059,6 +1127,13 @@ body {
   text-transform: uppercase;
   background: transparent;
   cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.ui-btn:hover,
+.ui-btn:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px color-mix(in oklch, var(--text), transparent 88%);
 }
 
 .ui-ghost {
@@ -1073,6 +1148,12 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.palette-swatch:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px color-mix(in oklch, var(--text), transparent 88%);
 }
 
 .palette-user-locked {

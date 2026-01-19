@@ -5,7 +5,60 @@ import type { Palette, PaletteRole } from "./palette";
  * Based on the 60-30-10 design rule
  */
 
-export type KitSize = 3 | 5 | 6;
+export type KitSize = 3 | 5 | 6 | "md3";
+
+/**
+ * Material Design 3 tonal role names
+ */
+export type MD3TonalRole = "primary" | "secondary" | "tertiary" | "neutral" | "error";
+
+/**
+ * MD3 tonal roles array
+ */
+export const MD3_TONAL_ROLES: MD3TonalRole[] = [
+  "primary",
+  "secondary",
+  "tertiary",
+  "neutral",
+  "error",
+];
+
+/**
+ * Default tone values for MD3 roles (light mode)
+ */
+export const DEFAULT_MD3_TONES: Record<MD3TonalRole, number> = {
+  primary: 40,
+  secondary: 40,
+  tertiary: 40,
+  neutral: 90,
+  error: 40,
+};
+
+/**
+ * MD3 role descriptions
+ */
+export const MD3_ROLE_INFO: Record<MD3TonalRole, { label: string; description: string }> = {
+  primary: {
+    label: "Primary",
+    description: "Main brand color for key actions and components",
+  },
+  secondary: {
+    label: "Secondary",
+    description: "Complementary color for less prominent components",
+  },
+  tertiary: {
+    label: "Tertiary",
+    description: "Accent color for contrast and visual interest",
+  },
+  neutral: {
+    label: "Neutral",
+    description: "Backgrounds, surfaces, and text colors",
+  },
+  error: {
+    label: "Error",
+    description: "Error states, warnings, and destructive actions",
+  },
+};
 
 export type RoleHierarchy = {
   role: PaletteRole;
@@ -27,6 +80,9 @@ export const ROLE_SETS: Record<KitSize, PaletteRole[]> = {
 
   // Complete: All 6 roles
   6: ["background", "surface", "primary", "accent", "text", "muted"],
+
+  // MD3 mode uses separate tonal roles
+  md3: [],
 };
 
 /**
@@ -195,6 +251,9 @@ export const HIERARCHIES: Record<KitSize, RoleHierarchy[]> = {
       ],
     },
   ],
+
+  // MD3 mode uses separate tonal roles
+  md3: [],
 };
 
 /**
@@ -243,8 +302,8 @@ export function getProportionStyles(size: KitSize): Record<PaletteRole, string> 
 /**
  * Validate if a kit size is supported
  */
-export function isValidKitSize(size: number): size is KitSize {
-  return size === 3 || size === 5 || size === 6;
+export function isValidKitSize(size: number | string): size is KitSize {
+  return size === 3 || size === 5 || size === 6 || size === "md3";
 }
 
 /**

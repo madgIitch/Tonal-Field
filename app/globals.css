@@ -1403,6 +1403,51 @@ body {
   opacity: 0.8;
 }
 
+/* Material 3 tonal grid */
+.md3-roles-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.md3-role-card {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklch, var(--surface), black 10%);
+  background: color-mix(in oklch, var(--surface), white 65%);
+  display: grid;
+  gap: 10px;
+}
+
+.md3-role-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.md3-role-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.md3-role-description {
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.md3-role-tone {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--surface), black 8%);
+}
+
+.md3-role-swatch {
+  min-height: 80px;
+}
+
 .palette-locked {
   position: relative;
   filter: grayscale(0.3);

@@ -318,7 +318,6 @@ export default function StudioPage() {
   const [md3Tones, setMd3Tones] = useState<Record<MD3TonalRole, number>>(DEFAULT_MD3_TONES);
   const [showHierarchy, setShowHierarchy] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [showDualTheme, setShowDualTheme] = useState(true);
   const [previewMode, setPreviewMode] = useState<ThemeMode>("light");
   const [showExportPanel, setShowExportPanel] = useState(false);
   const [trendingPalettes, setTrendingPalettes] = useState<CommunityPalette[]>([]);
@@ -1533,182 +1532,6 @@ export default function StudioPage() {
                   <div className="swatch-value">{formatOklch(pair.b)}</div>
                 </div>
               </div>
-              {isMd3Mode ? (
-                <div className="md3-roles-grid">
-                  {MD3_TONAL_ROLES.map((role) => {
-                    const tonalPalette = md3TonalPalettes?.[role];
-                    if (!tonalPalette) {
-                      return null;
-                    }
-                    const currentTone = md3Tones[role];
-                    const toneColor = tonalPalette[currentTone] ?? tonalPalette[40];
-                    const roleInfo = MD3_ROLE_INFO[role];
-                    const colorValue = formatOklch(toneColor);
-
-                    return (
-                      <div key={role} className="md3-role-card">
-                        <div className="md3-role-header">
-                          <div>
-                            <div className="md3-role-title">{roleInfo.label}</div>
-                            <div className="md3-role-description">{roleInfo.description}</div>
-                          </div>
-                          <div className="md3-role-tone">Tone {currentTone}</div>
-                        </div>
-
-                        <div
-                          className="palette-swatch md3-role-swatch"
-                          style={{
-                            background: toCss(toneColor),
-                            color: swatchText(toneColor),
-                          }}
-                        >
-                          <div className="palette-role">{roleInfo.label}</div>
-                          <button
-                            type="button"
-                            className="palette-value-btn"
-                            onClick={() => handleCopy(colorValue, "Color copied!", "tokens")}
-                            title="Click to copy"
-                          >
-                            {colorValue}
-                          </button>
-                        </div>
-
-                        <div className="tonal-ramp-container">
-                          <div className="tonal-ramp">
-                            {STANDARD_TONES.map((tone) => {
-                              const swatchColor = tonalPalette[tone];
-                              if (!swatchColor) return null;
-                              const isSelected = tone === currentTone;
-                              return (
-                                <button
-                                  key={tone}
-                                  type="button"
-                                  className={`tonal-swatch${isSelected ? " tonal-selected" : ""}`}
-                                  style={{ background: toCss(swatchColor) }}
-                                  onClick={() => handleMd3ToneChange(role, tone)}
-                                  title={`Tone ${tone}`}
-                                />
-                              );
-                            })}
-                          </div>
-                          <div className="tonal-slider-row">
-                            <input
-                              type="range"
-                              className="tonal-slider"
-                              min={0}
-                              max={100}
-                              value={currentTone}
-                              onChange={(e) => handleMd3ToneChange(role, Number(e.target.value))}
-                            />
-                            <span className="tonal-value">{currentTone}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="palette-groups">
-                  {paletteSections.map((section) => (
-                    <div key={section.title} className="palette-group">
-                      <div className="palette-group-title">{section.title}</div>
-                      <div className="palette-roles-with-tonal">
-                        {section.roles.map((role) => {
-                          const item = paletteByRole.get(role);
-                          if (!item) {
-                            return null;
-                          }
-                          const colorValue = formatOklch(item.color);
-                          const tonalPalette = roleTonalPalettes[role];
-                          const currentTone = roleTones[role];
-                          const isLocked = item.userLocked || item.proLocked;
-
-                          return (
-                            <div key={item.key} className="palette-role-container">
-                              {/* Color swatch */}
-                              <div
-                                className={[
-                                  "palette-swatch",
-                                  item.proLocked ? "palette-locked" : "",
-                                  item.userLocked ? "palette-user-locked" : "",
-                                ]
-                                  .filter(Boolean)
-                                  .join(" ")}
-                                style={{
-                                  background: toCss(item.color),
-                                  color: swatchText(item.color),
-                                }}
-                              >
-                                <div className="palette-role">{item.label}</div>
-                                <button
-                                  type="button"
-                                  className="palette-value-btn"
-                                  onClick={() => handleCopy(colorValue, "Color copied!", "tokens")}
-                                  title="Click to copy"
-                                >
-                                  {colorValue}
-                                </button>
-                                {item.proLocked ? (
-                                  <div className="locked-pill">Pro</div>
-                                ) : null}
-                                {!item.proLocked ? (
-                                  <button
-                                    type="button"
-                                    className={`lock-btn${
-                                      item.userLocked ? " is-locked" : ""
-                                    }`}
-                                    onClick={() =>
-                                      handleToggleLock(item.key, item.color)
-                                    }
-                                  >
-                                    {item.userLocked ? "Locked" : "Lock"}
-                                  </button>
-                                ) : null}
-                              </div>
-
-                              {/* Tonal ramp */}
-                              <div className={`tonal-ramp-container${isLocked ? " tonal-locked" : ""}`}>
-                                <div className="tonal-ramp">
-                                  {STANDARD_TONES.map((tone) => {
-                                    const toneColor = tonalPalette[tone];
-                                    if (!toneColor) return null;
-                                    const isSelected = tone === currentTone;
-                                    return (
-                                      <button
-                                        key={tone}
-                                        type="button"
-                                        className={`tonal-swatch${isSelected ? " tonal-selected" : ""}`}
-                                        style={{ background: toCss(toneColor) }}
-                                        onClick={() => !isLocked && handleToneChange(role, tone)}
-                                        disabled={isLocked}
-                                        title={`Tone ${tone}`}
-                                      />
-                                    );
-                                  })}
-                                </div>
-                                {!isLocked && (
-                                  <div className="tonal-slider-row">
-                                    <input
-                                      type="range"
-                                      className="tonal-slider"
-                                      min={0}
-                                      max={100}
-                                      value={currentTone}
-                                      onChange={(e) => handleToneChange(role, Number(e.target.value))}
-                                    />
-                                    <span className="tonal-value">{currentTone}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
               {/* Accessibility Section */}
               <div className="accessibility-section" style={{ marginTop: "32px" }}>
                 <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -2005,238 +1828,185 @@ export default function StudioPage() {
             </div>
             </div>
 
-            {/* Column 3: Dual Theme / Preview Mode */}
+            {/* Column 3: Palette Decisions */}
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div className="panel">
-                <div className="dual-theme-section">
-                <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span>Dual Theme (Light/Dark)</span>
-                  <button
-                    type="button"
-                    className="collapsible-toggle"
-                    onClick={() => setShowDualTheme(!showDualTheme)}
-                    aria-expanded={showDualTheme}
-                  >
-                    {showDualTheme ? "Hide" : "Show"}
-                  </button>
-                </div>
-                <div
-                  className={`collapsible${showDualTheme ? " collapsible-open" : ""}`}
-                >
-                  <div className="collapsible-content">
-                    {/* Mode indicator */}
-                    <div style={{ marginBottom: "20px", padding: "12px", background: "rgba(0,0,0,0.03)", borderRadius: "8px" }}>
-                      <div style={{ fontSize: "12px", marginBottom: "4px", opacity: 0.7 }}>
-                        Current preview mode:
-                      </div>
-                      <div style={{ fontSize: "14px", fontWeight: 600, textTransform: "capitalize" }}>
-                        {previewMode === "light" ? "Light" : "Dark"} Theme
-                      </div>
-                      <div style={{ fontSize: "11px", marginTop: "4px", opacity: 0.5 }}>
-                        Base palette detected as: {currentThemeMode}
-                      </div>
-                    </div>
+              <div className="panel panel-preview">
+                <div className="panel-title">Palette Decisions</div>
+                {isMd3Mode ? (
+                  <div className="md3-roles-grid">
+                    {MD3_TONAL_ROLES.map((role) => {
+                      const tonalPalette = md3TonalPalettes?.[role];
+                      if (!tonalPalette) {
+                        return null;
+                      }
+                      const currentTone = md3Tones[role];
+                      const toneColor = tonalPalette[currentTone] ?? tonalPalette[40];
+                      const roleInfo = MD3_ROLE_INFO[role];
+                      const colorValue = formatOklch(toneColor);
 
-                    {/* Theme Mode Toggle */}
-                    <div>
-                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
-                        Preview Mode
-                      </div>
-                      <div className="preview-tabs">
-                        {(["light", "dark"] as ThemeMode[]).map((mode) => (
-                          <button
-                            key={mode}
-                            type="button"
-                            className={`preview-tab${previewMode === mode ? " preview-tab-active" : ""}`}
-                            onClick={() => setPreviewMode(mode)}
+                      return (
+                        <div key={role} className="md3-role-card">
+                          <div className="md3-role-header">
+                            <div>
+                              <div className="md3-role-title">{roleInfo.label}</div>
+                              <div className="md3-role-description">{roleInfo.description}</div>
+                            </div>
+                            <div className="md3-role-tone">Tone {currentTone}</div>
+                          </div>
+
+                          <div
+                            className="palette-swatch md3-role-swatch"
+                            style={{
+                              background: toCss(toneColor),
+                              color: swatchText(toneColor),
+                            }}
                           >
-                            {mode === "light" ? "Light" : "Dark"}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                            <div className="palette-role">{roleInfo.label}</div>
+                            <button
+                              type="button"
+                              className="palette-value-btn"
+                              onClick={() => handleCopy(colorValue, "Color copied!", "tokens")}
+                              title="Click to copy"
+                            >
+                              {colorValue}
+                            </button>
+                          </div>
 
-                    {/* Single preview */}
-                    <div style={{ border: "1px solid rgba(0,0,0,0.1)", borderRadius: "8px", overflow: "hidden" }}>
-                      <div style={{ padding: "8px 12px", background: "rgba(0,0,0,0.03)", fontSize: "12px", fontWeight: 600, borderBottom: "1px solid rgba(0,0,0,0.1)" }}>
-                        {previewMode === "light" ? "Light" : "Dark"} Mode
-                      </div>
-                      <div style={{ padding: "12px", background: toCss(activePalette.background), minHeight: "120px" }}>
-                        <div style={{ padding: "12px", background: toCss(activePalette.surface), borderRadius: "6px", marginBottom: "8px" }}>
-                          <div style={{ color: toCss(activePalette.text), fontSize: "12px", fontWeight: 600, marginBottom: "6px" }}>
-                            Sample Card
-                          </div>
-                          <div style={{ color: toCss(activePalette.muted), fontSize: "11px", marginBottom: "8px" }}>
-                            Body text with muted color for secondary information.
-                          </div>
-                          <div style={{ display: "flex", gap: "6px" }}>
-                            <div style={{ padding: "4px 8px", background: toCss(activePalette.primary), color: "white", fontSize: "10px", borderRadius: "4px", fontWeight: 500 }}>
-                              Primary
+                          <div className="tonal-ramp-container">
+                            <div className="tonal-ramp">
+                              {STANDARD_TONES.map((tone) => {
+                                const swatchColor = tonalPalette[tone];
+                                if (!swatchColor) return null;
+                                const isSelected = tone === currentTone;
+                                return (
+                                  <button
+                                    key={tone}
+                                    type="button"
+                                    className={`tonal-swatch${isSelected ? " tonal-selected" : ""}`}
+                                    style={{ background: toCss(swatchColor) }}
+                                    onClick={() => handleMd3ToneChange(role, tone)}
+                                    title={`Tone ${tone}`}
+                                  />
+                                );
+                              })}
                             </div>
-                            <div style={{ padding: "4px 8px", background: toCss(activePalette.accent), color: "white", fontSize: "10px", borderRadius: "4px", fontWeight: 500 }}>
-                              Accent
+                            <div className="tonal-slider-row">
+                              <input
+                                type="range"
+                                className="tonal-slider"
+                                min={0}
+                                max={100}
+                                value={currentTone}
+                                onChange={(e) => handleMd3ToneChange(role, Number(e.target.value))}
+                              />
+                              <span className="tonal-value">{currentTone}</span>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Contrast comparison */}
-                    <div>
-                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
-                        Contrast Ratios (WCAG 2.1)
-                      </div>
-                      <div style={{ padding: "12px", background: "rgba(0,0,0,0.02)", borderRadius: "6px", border: "1px solid rgba(0,0,0,0.08)" }}>
-                        <div style={{ fontSize: "11px", fontWeight: 600, marginBottom: "8px", opacity: 0.7 }}>
-                          {previewMode === "light" ? "Light" : "Dark"} Mode
-                        </div>
-                        <div style={{ display: "grid", gap: "4px", fontSize: "11px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span>Text/Background:</span>
-                            <strong style={{ color: activeThemeContrast.textBg >= 4.5 ? "#22c55e" : "#ef4444" }}>
-                              {activeThemeContrast.textBg.toFixed(2)}:1
-                            </strong>
-                          </div>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span>Text/Surface:</span>
-                            <strong style={{ color: activeThemeContrast.textSurface >= 4.5 ? "#22c55e" : "#ef4444" }}>
-                              {activeThemeContrast.textSurface.toFixed(2)}:1
-                            </strong>
-                          </div>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span>Muted/Background:</span>
-                            <strong style={{ color: activeThemeContrast.mutedBg >= 3.0 ? "#22c55e" : "#ef4444" }}>
-                              {activeThemeContrast.mutedBg.toFixed(2)}:1
-                            </strong>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Color swatches comparison */}
-                    <div style={{ marginTop: "20px" }}>
-                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
-                        Color Roles
-                      </div>
-                      <div style={{ display: "grid", gap: "8px" }}>
-                        {(["background", "surface", "primary", "accent", "text", "muted"] as const).map((role) => (
-                          <div key={role} style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: "8px", alignItems: "center" }}>
-                            <div style={{ fontSize: "12px", fontWeight: 500, textTransform: "capitalize" }}>
-                              {role}
-                            </div>
-                            <div style={{
-                              padding: "8px 12px",
-                              background: toCss(activePalette[role]),
-                              color: swatchText(activePalette[role]),
-                              fontSize: "10px",
-                              borderRadius: "4px",
-                              border: "1px solid rgba(0,0,0,0.1)",
-                              textAlign: "center",
-                              fontWeight: 500,
-                            }}>
-                              {previewMode === "light" ? "Light" : "Dark"}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Export buttons for dual theme */}
-                    <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(0,0,0,0.1)" }}>
-                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
-                        Export Dual Theme
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "8px" }}>
-                        <button
-                          type="button"
-                          className="export-btn"
-                          style={{ fontSize: "12px", padding: "8px 12px" }}
-                          onClick={() => {
-                            const content = buildDualThemeCss(dualTheme, FULL_ROLES);
-                            const blob = new Blob([content], { type: "text/css" });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = "dual-theme.css";
-                            a.click();
-                            URL.revokeObjectURL(url);
-                          }}
-                        >
-                          CSS Variables
-                        </button>
-                        <button
-                          type="button"
-                          className="export-btn"
-                          style={{ fontSize: "12px", padding: "8px 12px" }}
-                          onClick={() => {
-                            const content = buildDualThemeJson(dualTheme, FULL_ROLES);
-                            const blob = new Blob([content], { type: "application/json" });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = "dual-theme.json";
-                            a.click();
-                            URL.revokeObjectURL(url);
-                          }}
-                        >
-                          JSON
-                        </button>
-                        <button
-                          type="button"
-                          className="export-btn"
-                          style={{ fontSize: "12px", padding: "8px 12px" }}
-                          onClick={() => {
-                            const content = buildDualThemeTailwind(dualTheme, FULL_ROLES);
-                            const blob = new Blob([content], { type: "text/javascript" });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = "tailwind.dual-theme.js";
-                            a.click();
-                            URL.revokeObjectURL(url);
-                          }}
-                        >
-                          Tailwind
-                        </button>
-                        <button
-                          type="button"
-                          className="export-btn"
-                          style={{ fontSize: "12px", padding: "8px 12px" }}
-                          onClick={() => {
-                            const content = buildDualThemeMui(dualTheme);
-                            const blob = new Blob([content], { type: "text/typescript" });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = "mui-dual-theme.ts";
-                            a.click();
-                            URL.revokeObjectURL(url);
-                          }}
-                        >
-                          Material UI
-                        </button>
-                        <button
-                          type="button"
-                          className="export-btn"
-                          style={{ fontSize: "12px", padding: "8px 12px" }}
-                          onClick={() => {
-                            const content = buildDualThemeReactNative(dualTheme, FULL_ROLES);
-                            const blob = new Blob([content], { type: "text/typescript" });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = "react-native-theme.ts";
-                            a.click();
-                            URL.revokeObjectURL(url);
-                          }}
-                        >
-                          React Native
-                        </button>
-                      </div>
-                    </div>
+                      );
+                    })}
                   </div>
-                </div>
-                </div>
+                ) : (
+                  <div className="palette-groups">
+                    {paletteSections.map((section) => (
+                      <div key={section.title} className="palette-group">
+                        <div className="palette-group-title">{section.title}</div>
+                        <div className="palette-roles-with-tonal">
+                          {section.roles.map((role) => {
+                            const item = paletteByRole.get(role);
+                            if (!item) {
+                              return null;
+                            }
+                            const colorValue = formatOklch(item.color);
+                            const tonalPalette = roleTonalPalettes[role];
+                            const currentTone = roleTones[role];
+                            const isLocked = item.userLocked || item.proLocked;
+
+                            return (
+                              <div key={item.key} className="palette-role-container">
+                                {/* Color swatch */}
+                                <div
+                                  className={[
+                                    "palette-swatch",
+                                    item.proLocked ? "palette-locked" : "",
+                                    item.userLocked ? "palette-user-locked" : "",
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" ")}
+                                  style={{
+                                    background: toCss(item.color),
+                                    color: swatchText(item.color),
+                                  }}
+                                >
+                                  <div className="palette-role">{item.label}</div>
+                                  <button
+                                    type="button"
+                                    className="palette-value-btn"
+                                    onClick={() => handleCopy(colorValue, "Color copied!", "tokens")}
+                                    title="Click to copy"
+                                  >
+                                    {colorValue}
+                                  </button>
+                                  {item.proLocked ? (
+                                    <div className="locked-pill">Pro</div>
+                                  ) : null}
+                                  {!item.proLocked ? (
+                                    <button
+                                      type="button"
+                                      className={`lock-btn${
+                                        item.userLocked ? " is-locked" : ""
+                                      }`}
+                                      onClick={() =>
+                                        handleToggleLock(item.key, item.color)
+                                      }
+                                    >
+                                      {item.userLocked ? "Locked" : "Lock"}
+                                    </button>
+                                  ) : null}
+                                </div>
+
+                                {/* Tonal ramp */}
+                                <div className={`tonal-ramp-container${isLocked ? " tonal-locked" : ""}`}>
+                                  <div className="tonal-ramp">
+                                    {STANDARD_TONES.map((tone) => {
+                                      const toneColor = tonalPalette[tone];
+                                      if (!toneColor) return null;
+                                      const isSelected = tone === currentTone;
+                                      return (
+                                        <button
+                                          key={tone}
+                                          type="button"
+                                          className={`tonal-swatch${isSelected ? " tonal-selected" : ""}`}
+                                          style={{ background: toCss(toneColor) }}
+                                          onClick={() => !isLocked && handleToneChange(role, tone)}
+                                          disabled={isLocked}
+                                          title={`Tone ${tone}`}
+                                        />
+                                      );
+                                    })}
+                                  </div>
+                                  {!isLocked && (
+                                    <div className="tonal-slider-row">
+                                      <input
+                                        type="range"
+                                        className="tonal-slider"
+                                        min={0}
+                                        max={100}
+                                        value={currentTone}
+                                        onChange={(e) => handleToneChange(role, Number(e.target.value))}
+                                      />
+                                      <span className="tonal-value">{currentTone}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -2244,13 +2014,20 @@ export default function StudioPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div className="panel">
                 <div className="palette-preview">
-                <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
                   <span>Usage preview</span>
-                  {showDualTheme ? (
-                    <span style={{ fontSize: "11px", padding: "4px 10px", background: "rgba(0,0,0,0.05)", borderRadius: "4px", fontWeight: 500 }}>
-                      {previewMode === "light" ? "Light" : "Dark"} mode
-                    </span>
-                  ) : null}
+                  <div className="preview-tabs">
+                    {(["light", "dark"] as ThemeMode[]).map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        className={`preview-tab${previewMode === mode ? " preview-tab-active" : ""}`}
+                        onClick={() => setPreviewMode(mode)}
+                      >
+                        {mode === "light" ? "Light" : "Dark"}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div
                   className={`ui-preview${isPro ? "" : " preview-locked"}`}
@@ -2354,6 +2131,36 @@ export default function StudioPage() {
                     className="score-fill"
                     style={{ width: formatPercent(pair.metrics.score) }}
                   />
+                </div>
+              </div>
+              <div style={{ marginTop: "16px" }}>
+                <div className="panel-title" style={{ fontSize: "12px", marginBottom: "8px" }}>
+                  Contrast Ratios (WCAG 2.1)
+                </div>
+                <div style={{ padding: "12px", background: "rgba(0,0,0,0.02)", borderRadius: "6px", border: "1px solid rgba(0,0,0,0.08)" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 600, marginBottom: "8px", opacity: 0.7 }}>
+                    {previewMode === "light" ? "Light" : "Dark"} Mode
+                  </div>
+                  <div style={{ display: "grid", gap: "4px", fontSize: "11px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span>Text/Background:</span>
+                      <strong style={{ color: activeThemeContrast.textBg >= 4.5 ? "#22c55e" : "#ef4444" }}>
+                        {activeThemeContrast.textBg.toFixed(2)}:1
+                      </strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span>Text/Surface:</span>
+                      <strong style={{ color: activeThemeContrast.textSurface >= 4.5 ? "#22c55e" : "#ef4444" }}>
+                        {activeThemeContrast.textSurface.toFixed(2)}:1
+                      </strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span>Muted/Background:</span>
+                      <strong style={{ color: activeThemeContrast.mutedBg >= 3.0 ? "#22c55e" : "#ef4444" }}>
+                        {activeThemeContrast.mutedBg.toFixed(2)}:1
+                      </strong>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="contrast">
@@ -2651,6 +2458,98 @@ export default function StudioPage() {
                     Free plan limit reached. Upgrade for unlimited saves.
                   </div>
                 ) : null}
+                <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid rgba(0,0,0,0.08)" }}>
+                  <div className="panel-title" style={{ fontSize: "12px", marginBottom: "8px" }}>
+                    Export Dual Theme
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "8px" }}>
+                    <button
+                      type="button"
+                      className="export-btn"
+                      style={{ fontSize: "12px", padding: "8px 12px" }}
+                      onClick={() => {
+                        const content = buildDualThemeCss(dualTheme, FULL_ROLES);
+                        const blob = new Blob([content], { type: "text/css" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "dual-theme.css";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                    >
+                      CSS Variables
+                    </button>
+                    <button
+                      type="button"
+                      className="export-btn"
+                      style={{ fontSize: "12px", padding: "8px 12px" }}
+                      onClick={() => {
+                        const content = buildDualThemeJson(dualTheme, FULL_ROLES);
+                        const blob = new Blob([content], { type: "application/json" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "dual-theme.json";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                    >
+                      JSON
+                    </button>
+                    <button
+                      type="button"
+                      className="export-btn"
+                      style={{ fontSize: "12px", padding: "8px 12px" }}
+                      onClick={() => {
+                        const content = buildDualThemeTailwind(dualTheme, FULL_ROLES);
+                        const blob = new Blob([content], { type: "text/javascript" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "tailwind.dual-theme.js";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                    >
+                      Tailwind
+                    </button>
+                    <button
+                      type="button"
+                      className="export-btn"
+                      style={{ fontSize: "12px", padding: "8px 12px" }}
+                      onClick={() => {
+                        const content = buildDualThemeMui(dualTheme);
+                        const blob = new Blob([content], { type: "text/typescript" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "mui-dual-theme.ts";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                    >
+                      Material UI
+                    </button>
+                    <button
+                      type="button"
+                      className="export-btn"
+                      style={{ fontSize: "12px", padding: "8px 12px" }}
+                      onClick={() => {
+                        const content = buildDualThemeReactNative(dualTheme, FULL_ROLES);
+                        const blob = new Blob([content], { type: "text/typescript" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "react-native-theme.ts";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                    >
+                      React Native
+                    </button>
+                  </div>
+                </div>
                 {savedPalettes.length ? (
                   <div className="saved-list">
                     {savedPalettes.map((item) => (

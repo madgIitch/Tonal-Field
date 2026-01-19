@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Frame } from "@/components/Frame";
 import { Section } from "@/components/Section";
 import { toCss } from "@/lib/color/oklch";
@@ -40,12 +40,7 @@ export default function CommunityPage() {
     }
   }, [user, authLoading]);
 
-  // Load palettes on mount
-  useEffect(() => {
-    loadPalettes();
-  }, []);
-
-  const loadPalettes = async () => {
+  const loadPalettes = useCallback(async () => {
     setLoading(true);
     const filters: FilterOptions = {
       mood: selectedMoods.length > 0 ? selectedMoods : undefined,
@@ -70,11 +65,16 @@ export default function CommunityPage() {
     }
     setInteractions(interactionMap);
     setLoading(false);
-  };
+  }, [searchQuery, selectedMoods, selectedStyles, sortBy]);
+
+  // Load palettes on mount
+  useEffect(() => {
+    loadPalettes();
+  }, [loadPalettes]);
 
   useEffect(() => {
     loadPalettes();
-  }, [selectedMoods, selectedStyles, searchQuery, sortBy]);
+  }, [loadPalettes]);
 
   const handleToggleMood = (mood: MoodTag) => {
     setSelectedMoods((prev) =>

@@ -1063,6 +1063,7 @@ body {
   overflow: hidden;
   display: grid;
   place-items: center;
+  position: relative;
 }
 
 .import-preview img {

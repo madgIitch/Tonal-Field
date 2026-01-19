@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
+import Image from "next/image";
 import { Frame } from "@/components/Frame";
 import { Field } from "@/components/Field";
 import { Section } from "@/components/Section";
@@ -634,6 +635,7 @@ export default function StudioPage() {
       surface: toCss(activePalette.surface),
       text: toCss(activePalette.text),
       muted: toCss(activePalette.muted),
+      mutedText: toCss(pickTextColor(activePalette.muted).color),
       primary: toCss(activePalette.primary),
       primaryText: toCss(pickTextColor(activePalette.primary).color),
       accent: toCss(activePalette.accent),
@@ -818,7 +820,7 @@ export default function StudioPage() {
       return objectUrl;
     });
 
-    const img = new Image();
+    const img = new window.Image();
     img.onload = () => {
       const maxSize = 260;
       const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
@@ -1268,7 +1270,13 @@ export default function StudioPage() {
                       />
                       {imagePreview ? (
                         <div className="import-preview">
-                          <img src={imagePreview} alt="Uploaded preview" />
+                          <Image
+                            src={imagePreview}
+                            alt="Uploaded preview"
+                            fill
+                            sizes="100%"
+                            unoptimized
+                          />
                         </div>
                       ) : (
                         <div className="import-placeholder">
@@ -2167,7 +2175,7 @@ export default function StudioPage() {
                       className="ui-chip"
                       style={{
                         background: paletteStyles.muted,
-                        color: paletteStyles.text,
+                        color: paletteStyles.mutedText,
                       }}
                     >
                       Muted label

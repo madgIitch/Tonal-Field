@@ -367,10 +367,13 @@ export default function StudioPage() {
 
     // Load locks from URL
     const locksParam = params.get("lk");
+    console.log("[DEBUG] Studio loading - locksParam from URL:", locksParam);
     if (locksParam) {
       const parsedLocks = deserializeLocks(locksParam);
+      console.log("[DEBUG] Studio loading - parsedLocks:", parsedLocks);
       if (Object.keys(parsedLocks).length > 0) {
         setLocks(parsedLocks);
+        console.log("[DEBUG] Studio loading - locks set successfully");
       }
     }
 

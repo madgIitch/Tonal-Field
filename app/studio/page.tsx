@@ -83,6 +83,71 @@ const swatchText = (color: OKLCH) =>
 const formatRole = (role: PaletteRole) =>
   role.charAt(0).toUpperCase() + role.slice(1);
 
+// Lock serialization helpers
+const ROLE_ABBREV: Record<PaletteRole, string> = {
+  background: "bg",
+  surface: "sf",
+  primary: "pr",
+  accent: "ac",
+  text: "tx",
+  muted: "mu",
+};
+
+const ABBREV_TO_ROLE: Record<string, PaletteRole> = {
+  bg: "background",
+  sf: "surface",
+  pr: "primary",
+  ac: "accent",
+  tx: "text",
+  mu: "muted",
+};
+
+// Serialize locks to URL param: "bg.98.02.90,pr.55.15.240"
+const serializeLocks = (locks: Partial<Record<PaletteRole, OKLCH>>): string => {
+  const entries = Object.entries(locks) as [PaletteRole, OKLCH][];
+  if (entries.length === 0) return "";
+
+  return entries
+    .filter(([, color]) => color)
+    .map(([role, color]) => {
+      const abbrev = ROLE_ABBREV[role];
+      // L: 0-1 -> 0-100, C: 0-0.4 -> 0-400 (preserve precision), H: 0-360
+      const l = Math.round(color.l * 100);
+      const c = Math.round(color.c * 1000); // More precision for chroma
+      const h = Math.round(color.h);
+      return `${abbrev}.${l}.${c}.${h}`;
+    })
+    .join(",");
+};
+
+// Deserialize locks from URL param
+const deserializeLocks = (param: string): Partial<Record<PaletteRole, OKLCH>> => {
+  if (!param) return {};
+
+  const locks: Partial<Record<PaletteRole, OKLCH>> = {};
+  const parts = param.split(",");
+
+  for (const part of parts) {
+    const [abbrev, lStr, cStr, hStr] = part.split(".");
+    const role = ABBREV_TO_ROLE[abbrev];
+    if (!role) continue;
+
+    const l = Number(lStr);
+    const c = Number(cStr);
+    const h = Number(hStr);
+
+    if (Number.isNaN(l) || Number.isNaN(c) || Number.isNaN(h)) continue;
+
+    locks[role] = {
+      l: l / 100,        // 0-100 -> 0-1
+      c: c / 1000,       // 0-400 -> 0-0.4
+      h: h,              // 0-360
+    };
+  }
+
+  return locks;
+};
+
 const variationOffsets = [-12, 0, 12];
 
 const FULL_ROLES: PaletteRole[] = [
@@ -192,6 +257,7 @@ type SavedPalette = {
   spectrumMode?: boolean;
   autoFix: boolean;
   createdAt: string;
+  locks?: Partial<Record<PaletteRole, OKLCH>>;
 };
 
 type PaletteDisplayItem = {
@@ -299,6 +365,15 @@ export default function StudioPage() {
       }
     }
 
+    // Load locks from URL
+    const locksParam = params.get("lk");
+    if (locksParam) {
+      const parsedLocks = deserializeLocks(locksParam);
+      if (Object.keys(parsedLocks).length > 0) {
+        setLocks(parsedLocks);
+      }
+    }
+
     setHasLoadedSeed(true);
   }, []);
 
@@ -336,11 +411,18 @@ export default function StudioPage() {
     params.set("sm", spectrumMode ? "1" : "0");
     params.set("af", autoFix ? "1" : "0");
     params.set("s", String(seed));
+
+    // Add locks to URL if any exist
+    const serializedLocks = serializeLocks(locks);
+    if (serializedLocks) {
+      params.set("lk", serializedLocks);
+    }
+
     const query = params.toString();
     const nextUrl = `${window.location.pathname}?${query}`;
     window.history.replaceState(null, "", nextUrl);
     setShareUrl(`${window.location.origin}${nextUrl}`);
-  }, [autoFix, energy, hasLoadedSeed, tension, seed, hueBase, hueAuto, spectrumMode]);
+  }, [autoFix, energy, hasLoadedSeed, tension, seed, hueBase, hueAuto, spectrumMode, locks]);
 
   const resolveHueBase = useCallback(
     (energyValue: number, tensionValue: number) => {
@@ -624,6 +706,8 @@ export default function StudioPage() {
       spectrumMode,
       autoFix,
       createdAt: new Date().toISOString(),
+      // Include locks if any exist
+      ...(Object.keys(locks).length > 0 && { locks: { ...locks } }),
     };
 
     setSavedPalettes((prev) => [entry, ...prev]);
@@ -726,6 +810,8 @@ export default function StudioPage() {
       setSpectrumMode(entry.spectrumMode);
     }
     setAutoFix(entry.autoFix);
+    // Restore locks if they exist, otherwise clear them
+    setLocks(entry.locks ?? {});
   };
 
   const handleDelete = (id: string) => {

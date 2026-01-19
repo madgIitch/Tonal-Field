@@ -3,6 +3,7 @@ import { clamp } from "./oklch";
 import {
   generateTonalPalette,
   generateColorScheme,
+  getColorAtTone,
   type TonalPalette,
   type ColorScheme,
 } from "./tonal";
@@ -132,4 +133,73 @@ export function buildExtendedPalette(pair: Pair): ExtendedPalette {
       dark: darkScheme,
     },
   };
+}
+
+/**
+ * Type for role-based tonal palettes
+ * Each palette role gets its own tonal ramp
+ */
+export type RoleTonalPalettes = Record<PaletteRole, TonalPalette>;
+
+/**
+ * Default tone values for each role
+ * These follow Material Design 3 conventions for light mode
+ */
+export const DEFAULT_ROLE_TONES: Record<PaletteRole, number> = {
+  background: 95, // Very light for backgrounds
+  surface: 90, // Slightly darker for cards/surfaces
+  primary: 40, // Medium for primary actions
+  accent: 50, // Medium-high for accents
+  text: 10, // Very dark for readable text
+  muted: 40, // Medium for secondary text
+};
+
+/**
+ * Generates tonal palettes for each role in the base palette
+ * Each role gets its own 13-tone ramp based on its base color
+ *
+ * @param basePalette - The palette to generate tonal ramps from
+ * @returns Object mapping each role to its tonal palette
+ */
+export function buildRoleTonalPalettes(basePalette: Palette): RoleTonalPalettes {
+  const palettes: Partial<RoleTonalPalettes> = {};
+
+  (Object.keys(basePalette) as PaletteRole[]).forEach((role) => {
+    // Adjust minimum chroma based on role type
+    const minChroma =
+      role === "background" || role === "surface"
+        ? 0.01
+        : role === "text" || role === "muted"
+          ? 0.02
+          : 0.04;
+
+    palettes[role] = generateTonalPalette(basePalette[role], minChroma);
+  });
+
+  return palettes as RoleTonalPalettes;
+}
+
+/**
+ * Applies tone selections to generate final palette colors
+ * Takes base palette and tone values, returns adjusted palette
+ *
+ * @param basePalette - Original palette (provides hue and chroma)
+ * @param roleTones - Tone value (0-100) for each role
+ * @returns New palette with applied tone values
+ */
+export function applyTonesToPalette(
+  basePalette: Palette,
+  roleTones: Record<PaletteRole, number>
+): Palette {
+  const result: Partial<Palette> = {};
+
+  (Object.keys(basePalette) as PaletteRole[]).forEach((role) => {
+    const baseColor = basePalette[role];
+    const tone = roleTones[role];
+
+    // Preserve hue and chroma, apply selected tone (lightness)
+    result[role] = getColorAtTone(baseColor, tone);
+  });
+
+  return result as Palette;
 }

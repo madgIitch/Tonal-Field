@@ -1288,12 +1288,12 @@ body {
 
 .palette-groups {
   display: grid;
-  gap: 14px;
+  gap: 24px;
 }
 
 .palette-group {
   display: grid;
-  gap: 8px;
+  gap: 12px;
 }
 
 .palette-group-title {
@@ -1301,6 +1301,106 @@ body {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   opacity: 0.65;
+}
+
+/* New tonal role layout */
+.palette-roles-with-tonal {
+  display: grid;
+  gap: 16px;
+}
+
+.palette-role-container {
+  display: grid;
+  gap: 8px;
+}
+
+/* Tonal ramp styles */
+.tonal-ramp-container {
+  padding: 8px;
+  background: color-mix(in oklch, var(--surface), transparent 60%);
+  border-radius: 8px;
+}
+
+.tonal-ramp-container.tonal-locked {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.tonal-ramp {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.tonal-swatch {
+  flex: 1;
+  height: 20px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+}
+
+.tonal-swatch:hover:not(:disabled) {
+  transform: scaleY(1.4);
+  z-index: 1;
+}
+
+.tonal-swatch.tonal-selected {
+  transform: scaleY(1.5);
+  z-index: 2;
+  box-shadow: 0 0 0 2px var(--accent, #6366f1), 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.tonal-swatch:disabled {
+  cursor: not-allowed;
+}
+
+.tonal-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tonal-slider {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.tonal-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent, #6366f1);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.tonal-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent, #6366f1);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.tonal-value {
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 28px;
+  text-align: right;
+  opacity: 0.8;
 }
 
 .palette-locked {

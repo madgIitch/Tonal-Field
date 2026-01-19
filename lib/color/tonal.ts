@@ -250,6 +250,32 @@ export function generateColorScheme(
 }
 
 /**
+ * Gets a color at a specific tone from a base color
+ * Useful for applying tone selections to individual colors
+ *
+ * @param baseColor - The base color (hue and chroma are preserved)
+ * @param tone - The tone value (0-100)
+ * @returns OKLCH color at the specified tone
+ */
+export function getColorAtTone(baseColor: OKLCH, tone: number): OKLCH {
+  const lightness = clamp(tone / 100, 0, 1);
+  let adjustedChroma = baseColor.c;
+
+  // Reduce chroma at extremes (same logic as generateTonalPalette)
+  if (tone <= 10) {
+    adjustedChroma *= 0.7;
+  } else if (tone >= 95) {
+    adjustedChroma *= 0.5;
+  }
+
+  return {
+    l: lightness,
+    c: clamp(adjustedChroma, 0.02, 0.4),
+    h: baseColor.h,
+  };
+}
+
+/**
  * Converts a tone value (0-100) to a readable label
  */
 export function toneName(tone: number): string {

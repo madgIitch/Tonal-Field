@@ -8,7 +8,13 @@ import { Field } from "@/components/Field";
 import { Section } from "@/components/Section";
 import { Slider } from "@/components/Slider";
 import { generatePair } from "@/lib/color/model";
-import { buildPalette, buildExtendedPalette } from "@/lib/color/palette";
+import {
+  buildPalette,
+  buildExtendedPalette,
+  buildRoleTonalPalettes,
+  applyTonesToPalette,
+  DEFAULT_ROLE_TONES,
+} from "@/lib/color/palette";
 import type { OKLCH } from "@/lib/color/oklch";
 import { clamp, fromRgb, toCss } from "@/lib/color/oklch";
 import {
@@ -297,7 +303,6 @@ export default function StudioPage() {
   const [extractedColors, setExtractedColors] = useState<OKLCH[]>([]);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState("");
-  const [showTonalPalettes, setShowTonalPalettes] = useState(false);
   const [colorBlindnessMode, setColorBlindnessMode] = useState<ColorBlindnessType>("normal");
   const [showAccessibility, setShowAccessibility] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
@@ -306,6 +311,7 @@ export default function StudioPage() {
   const [publishMoods, setPublishMoods] = useState<MoodTag[]>([]);
   const [publishStyles, setPublishStyles] = useState<StyleTag[]>([]);
   const [kitSize, setKitSize] = useState<KitSize>(6);
+  const [roleTones, setRoleTones] = useState<Record<PaletteRole, number>>(DEFAULT_ROLE_TONES);
   const [showHierarchy, setShowHierarchy] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showDualTheme, setShowDualTheme] = useState(true);
@@ -499,14 +505,17 @@ export default function StudioPage() {
   }, [basePalette]);
 
   const paletteSeed = useMemo(() => {
-    const next = { ...basePalette };
+    // First apply tone selections to base palette
+    const withTones = applyTonesToPalette(basePalette, roleTones);
+    // Then apply locks (locked colors override tonal adjustments)
+    const next = { ...withTones };
     (Object.entries(locks) as [PaletteRole, OKLCH][]).forEach(([role, color]) => {
       if (color) {
         next[role] = color;
       }
     });
     return next;
-  }, [basePalette, locks]);
+  }, [basePalette, roleTones, locks]);
 
   const autoFixResult = useMemo(() => {
     if (autoFix) {
@@ -560,6 +569,24 @@ export default function StudioPage() {
   const hierarchy = useMemo(() => {
     return getHierarchyForSize(kitSize);
   }, [kitSize]);
+
+  // Generate tonal palettes for each role (based on base palette colors)
+  const roleTonalPalettes = useMemo(() => {
+    return buildRoleTonalPalettes(basePalette);
+  }, [basePalette]);
+
+  // Handler for tone changes
+  const handleToneChange = useCallback(
+    (role: PaletteRole, tone: number) => {
+      // Don't allow tone changes on locked colors
+      if (locks[role]) return;
+      setRoleTones((prev) => ({
+        ...prev,
+        [role]: tone,
+      }));
+    },
+    [locks]
+  );
 
   // Generate dual theme (light + dark variants)
   // Apply autoFix to dark theme as well if enabled
@@ -1488,135 +1515,100 @@ export default function StudioPage() {
                 {paletteSections.map((section) => (
                   <div key={section.title} className="palette-group">
                     <div className="palette-group-title">{section.title}</div>
-                    <div className="palette-grid-responsive">
+                    <div className="palette-roles-with-tonal">
                       {section.roles.map((role) => {
                         const item = paletteByRole.get(role);
                         if (!item) {
                           return null;
                         }
                         const colorValue = formatOklch(item.color);
+                        const tonalPalette = roleTonalPalettes[role];
+                        const currentTone = roleTones[role];
+                        const isLocked = item.userLocked || item.proLocked;
+
                         return (
-                          <div
-                            key={item.key}
-                            className={[
-                              "palette-swatch",
-                              item.proLocked ? "palette-locked" : "",
-                              item.userLocked ? "palette-user-locked" : "",
-                            ]
-                              .filter(Boolean)
-                              .join(" ")}
-                            style={{
-                              background: toCss(item.color),
-                              color: swatchText(item.color),
-                            }}
-                          >
-                            <div className="palette-role">{item.label}</div>
-                            <button
-                              type="button"
-                              className="palette-value-btn"
-                              onClick={() => handleCopy(colorValue, "Color copied!", "tokens")}
-                              title="Click to copy"
+                          <div key={item.key} className="palette-role-container">
+                            {/* Color swatch */}
+                            <div
+                              className={[
+                                "palette-swatch",
+                                item.proLocked ? "palette-locked" : "",
+                                item.userLocked ? "palette-user-locked" : "",
+                              ]
+                                .filter(Boolean)
+                                .join(" ")}
+                              style={{
+                                background: toCss(item.color),
+                                color: swatchText(item.color),
+                              }}
                             >
-                              {colorValue}
-                            </button>
-                            {item.proLocked ? (
-                              <div className="locked-pill">Pro</div>
-                            ) : null}
-                            {!item.proLocked ? (
+                              <div className="palette-role">{item.label}</div>
                               <button
                                 type="button"
-                                className={`lock-btn${
-                                  item.userLocked ? " is-locked" : ""
-                                }`}
-                                onClick={() =>
-                                  handleToggleLock(item.key, item.color)
-                                }
+                                className="palette-value-btn"
+                                onClick={() => handleCopy(colorValue, "Color copied!", "tokens")}
+                                title="Click to copy"
                               >
-                                {item.userLocked ? "Locked" : "Lock"}
+                                {colorValue}
                               </button>
-                            ) : null}
+                              {item.proLocked ? (
+                                <div className="locked-pill">Pro</div>
+                              ) : null}
+                              {!item.proLocked ? (
+                                <button
+                                  type="button"
+                                  className={`lock-btn${
+                                    item.userLocked ? " is-locked" : ""
+                                  }`}
+                                  onClick={() =>
+                                    handleToggleLock(item.key, item.color)
+                                  }
+                                >
+                                  {item.userLocked ? "Locked" : "Lock"}
+                                </button>
+                              ) : null}
+                            </div>
+
+                            {/* Tonal ramp */}
+                            <div className={`tonal-ramp-container${isLocked ? " tonal-locked" : ""}`}>
+                              <div className="tonal-ramp">
+                                {STANDARD_TONES.map((tone) => {
+                                  const toneColor = tonalPalette[tone];
+                                  if (!toneColor) return null;
+                                  const isSelected = tone === currentTone;
+                                  return (
+                                    <button
+                                      key={tone}
+                                      type="button"
+                                      className={`tonal-swatch${isSelected ? " tonal-selected" : ""}`}
+                                      style={{ background: toCss(toneColor) }}
+                                      onClick={() => !isLocked && handleToneChange(role, tone)}
+                                      disabled={isLocked}
+                                      title={`Tone ${tone}`}
+                                    />
+                                  );
+                                })}
+                              </div>
+                              {!isLocked && (
+                                <div className="tonal-slider-row">
+                                  <input
+                                    type="range"
+                                    className="tonal-slider"
+                                    min={0}
+                                    max={100}
+                                    value={currentTone}
+                                    onChange={(e) => handleToneChange(role, Number(e.target.value))}
+                                  />
+                                  <span className="tonal-value">{currentTone}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
                     </div>
                   </div>
                 ))}
-              </div>
-
-              {/* Material Design 3 Tonal Palettes Section */}
-              <div className="tonal-palettes-section" style={{ marginTop: "32px" }}>
-                <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span>Tonal Palettes (Material Design 3)</span>
-                  <button
-                    type="button"
-                    className="collapsible-toggle"
-                    onClick={() => setShowTonalPalettes(!showTonalPalettes)}
-                    aria-expanded={showTonalPalettes}
-                  >
-                    {showTonalPalettes ? "Hide" : "Show"}
-                  </button>
-                </div>
-                <div
-                  className={`collapsible${showTonalPalettes ? " collapsible-open" : ""}`}
-                >
-                  <div className="collapsible-content">
-                    <p style={{ fontSize: "12px", opacity: 0.7, margin: 0 }}>
-                      Tonal palettes define role-based ramps: background/surface for layout, primary/accent for actions,
-                      and text/muted for readable contrast across light and dark modes.
-                    </p>
-                    {extendedPalette.tonal ? (
-                      <div style={{ display: "grid", gap: "24px" }}>
-                        {Object.entries(extendedPalette.tonal).map(
-                          ([paletteName, tones]) => (
-                            <div key={paletteName} className="tonal-palette-row">
-                              <div
-                                className="tonal-palette-label"
-                                style={{
-                                  fontSize: "13px",
-                                  fontWeight: 600,
-                                  marginBottom: "8px",
-                                  textTransform: "capitalize",
-                                }}
-                              >
-                                {paletteName}
-                              </div>
-                              <div
-                                style={{
-                                  display: "grid",
-                                  gridTemplateColumns:
-                                    "repeat(auto-fit, minmax(60px, 1fr))",
-                                  gap: "4px",
-                                }}
-                              >
-                                {STANDARD_TONES.map((tone) => {
-                                  const color = tones[tone];
-                                  if (!color) return null;
-                                  return (
-                                    <div
-                                      key={tone}
-                                      style={{
-                                        background: toCss(color),
-                                        color: tone <= 50 ? "white" : "black",
-                                        padding: "12px 8px",
-                                        borderRadius: "6px",
-                                        fontSize: "11px",
-                                        textAlign: "center",
-                                        fontWeight: 500,
-                                        border: "1px solid rgba(0,0,0,0.1)",
-                                      }}
-                                    >
-                                      {tone}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
               </div>
 
               {/* Accessibility Section */}

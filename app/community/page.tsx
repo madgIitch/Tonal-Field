@@ -101,6 +101,10 @@ export default function CommunityPage() {
   const handleViewPalette = (palette: CommunityPalette) => {
     trackView(palette.id);
 
+    console.log("[DEBUG] Loading palette from community:", palette.name);
+    console.log("[DEBUG] Palette parameters:", palette.parameters);
+    console.log("[DEBUG] Palette locks:", palette.parameters.locks);
+
     // Navigate to studio with palette parameters
     const params = new URLSearchParams({
       e: String(palette.parameters.energy),
@@ -114,6 +118,8 @@ export default function CommunityPage() {
     if (palette.parameters.locks) {
       params.set("lk", palette.parameters.locks);
     }
+
+    console.log("[DEBUG] Final URL params:", params.toString());
 
     window.location.href = `/studio?${params.toString()}`;
   };

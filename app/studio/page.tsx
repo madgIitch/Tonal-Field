@@ -909,6 +909,8 @@ export default function StudioPage() {
     try {
       // Serialize locks if any exist
       const serializedLocks = serializeLocks(locks);
+      console.log("[DEBUG] Publishing with locks:", locks);
+      console.log("[DEBUG] Serialized locks:", serializedLocks);
 
       await publishPalette({
         name: publishName.trim(),

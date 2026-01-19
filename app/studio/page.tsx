@@ -1014,36 +1014,37 @@ export default function StudioPage() {
   }, [handleShuffle]);
 
   const contrastChecks = useMemo(() => {
+    const activePrimaryText = pickTextColor(activePalette.primary).color;
     const items = [
       {
         key: "text-bg",
         label: "Text on background",
-        foreground: palette.text,
-        background: palette.background,
+        foreground: activePalette.text,
+        background: activePalette.background,
       },
       {
         key: "text-surface",
         label: "Text on surface",
-        foreground: palette.text,
-        background: palette.surface,
+        foreground: activePalette.text,
+        background: activePalette.surface,
       },
       {
         key: "muted-bg",
         label: "Muted on background",
-        foreground: palette.muted,
-        background: palette.background,
+        foreground: activePalette.muted,
+        background: activePalette.background,
       },
       {
         key: "primary",
         label: "Primary text on primary",
-        foreground: primaryText,
-        background: palette.primary,
+        foreground: activePrimaryText,
+        background: activePalette.primary,
       },
       {
         key: "accent",
         label: "Accent on background",
-        foreground: palette.accent,
-        background: palette.background,
+        foreground: activePalette.accent,
+        background: activePalette.background,
       },
     ];
 
@@ -1055,7 +1056,7 @@ export default function StudioPage() {
         level: getContrastLevel(ratio),
       };
     });
-  }, [palette, primaryText]);
+  }, [activePalette]);
 
   const variations = useMemo(() => {
     return variationOffsets.flatMap((yOffset) =>
@@ -1176,45 +1177,43 @@ export default function StudioPage() {
                   className={`collapsible${showAdvanced ? " collapsible-open" : ""}`}
                 >
                   <div className="collapsible-content">
-                    <label className="toggle">
-                      <input
-                        type="checkbox"
-                        checked={hueAuto}
-                        onChange={(event) => {
-                          const isAuto = event.target.checked;
-                          setHueAuto(isAuto);
-                          if (isAuto) {
-                            setSpectrumMode(false);
-                          }
-                        }}
-                      />
-                      <span>Auto (let Energy/Tension drive hue)</span>
-                    </label>
-                    <label className="toggle">
-                      <input
-                        type="checkbox"
-                        checked={spectrumMode}
-                        onChange={(event) => {
-                          const isSpectrum = event.target.checked;
-                          setSpectrumMode(isSpectrum);
-                          if (isSpectrum) {
-                            setHueAuto(false);
-                          }
-                        }}
-                      />
-                      <span>Spectrum mode (explore full color wheel)</span>
-                    </label>
-                    {spectrumMode ? (
-                      <div>
-                        <label
-                          style={{
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            display: "block",
-                            marginBottom: "8px",
-                            color: "#666",
+                    <div className="advanced-toggles">
+                      <label className="advanced-toggle">
+                        <input
+                          type="checkbox"
+                          checked={hueAuto}
+                          onChange={(event) => {
+                            const isAuto = event.target.checked;
+                            setHueAuto(isAuto);
+                            if (isAuto) {
+                              setSpectrumMode(false);
+                            }
                           }}
-                        >
+                        />
+                        <span className="advanced-toggle-label">Auto Hue</span>
+                      </label>
+                      <div className="advanced-toggle-desc">Let Energy/Tension drive the hue automatically</div>
+
+                      <label className="advanced-toggle">
+                        <input
+                          type="checkbox"
+                          checked={spectrumMode}
+                          onChange={(event) => {
+                            const isSpectrum = event.target.checked;
+                            setSpectrumMode(isSpectrum);
+                            if (isSpectrum) {
+                              setHueAuto(false);
+                            }
+                          }}
+                        />
+                        <span className="advanced-toggle-label">Spectrum Mode</span>
+                      </label>
+                      <div className="advanced-toggle-desc">Explore the full color wheel with energy axis</div>
+                    </div>
+
+                    {spectrumMode ? (
+                      <div className="advanced-slider">
+                        <label className="advanced-slider-label">
                           Saturation: {Math.round(spectrumChroma)}%
                         </label>
                         <input
@@ -1225,14 +1224,14 @@ export default function StudioPage() {
                           onChange={(e) =>
                             setSpectrumChroma(Number(e.target.value))
                           }
-                          style={{ width: "100%" }}
                         />
                       </div>
                     ) : null}
+
                     <div className="import-block">
                       <div className="preset-header">
-                        <div className="preset-title">Image import</div>
-                        <div className="preset-note">Extract palette</div>
+                        <div className="preset-title">Image Import</div>
+                        <div className="preset-note">Extract colors</div>
                       </div>
                       <input
                         className="import-input"
@@ -1240,17 +1239,14 @@ export default function StudioPage() {
                         accept="image/*"
                         onChange={handleImageUpload}
                       />
-                      <label className="toggle toggle-inline">
-                        <input type="checkbox" disabled />
-                        <span>OCR (coming soon)</span>
-                      </label>
                       {imagePreview ? (
                         <div className="import-preview">
                           <img src={imagePreview} alt="Uploaded preview" />
-                          <span>{imageName}</span>
                         </div>
                       ) : (
-                        <div className="import-placeholder">No image loaded.</div>
+                        <div className="import-placeholder">
+                          Drop an image or click to upload
+                        </div>
                       )}
                       {isExtracting ? (
                         <div className="import-status">Extracting colors...</div>
@@ -1266,6 +1262,7 @@ export default function StudioPage() {
                                 key={`${color.h}-${index}`}
                                 className="import-swatch"
                                 style={{ background: toCss(color) }}
+                                title={formatOklch(color)}
                               />
                             ))}
                           </div>
@@ -1903,10 +1900,13 @@ export default function StudioPage() {
                     {/* Mode indicator */}
                     <div style={{ marginBottom: "20px", padding: "12px", background: "rgba(0,0,0,0.03)", borderRadius: "8px" }}>
                       <div style={{ fontSize: "12px", marginBottom: "4px", opacity: 0.7 }}>
-                        Current palette mode:
+                        Current preview mode:
                       </div>
                       <div style={{ fontSize: "14px", fontWeight: 600, textTransform: "capitalize" }}>
-                        {currentThemeMode} Theme
+                        {previewMode === "light" ? "Light" : "Dark"} Theme
+                      </div>
+                      <div style={{ fontSize: "11px", marginTop: "4px", opacity: 0.5 }}>
+                        Base palette detected as: {currentThemeMode}
                       </div>
                     </div>
 

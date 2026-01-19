@@ -403,3 +403,61 @@ export async function getSavedPalettes(): Promise<CommunityPalette[]> {
     };
   });
 }
+
+// Get trending palettes (top by likes, limited)
+export async function getTrendingPalettes(limit: number = 6): Promise<CommunityPalette[]> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("palettes")
+    .select(`
+      *,
+      profiles:user_id (
+        id,
+        name,
+        email
+      )
+    `)
+    .eq("is_public", true)
+    .order("likes_count", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("Error fetching trending palettes:", error);
+    return [];
+  }
+
+  return data.map((p) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description || undefined,
+    palette: p.palette as {
+      background: OKLCH;
+      surface: OKLCH;
+      primary: OKLCH;
+      accent: OKLCH;
+      text: OKLCH;
+      muted: OKLCH;
+    },
+    parameters: p.parameters as {
+      energy: number;
+      tension: number;
+      hueBase?: number;
+      hueAuto?: boolean;
+      spectrumMode?: boolean;
+      locks?: string;
+    },
+    tags: p.tags as { mood: MoodTag[]; style: StyleTag[] },
+    author: {
+      id: p.profiles.id,
+      name: p.profiles.name || p.profiles.email.split("@")[0],
+    },
+    stats: {
+      likes: p.likes_count,
+      saves: p.saves_count,
+      views: p.views_count,
+    },
+    createdAt: p.created_at,
+    updatedAt: p.updated_at,
+  }));
+}

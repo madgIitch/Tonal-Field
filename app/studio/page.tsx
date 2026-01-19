@@ -43,8 +43,8 @@ import {
   type ColorBlindnessType,
   type PairAnalysis,
 } from "@/lib/color/accessibility";
-import { publishPalette } from "@/lib/community/supabase-service";
-import type { MoodTag, StyleTag } from "@/lib/community/types";
+import { publishPalette, getTrendingPalettes } from "@/lib/community/supabase-service";
+import type { MoodTag, StyleTag, CommunityPalette } from "@/lib/community/types";
 import { MOOD_TAGS, STYLE_TAGS } from "@/lib/community/types";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import type { KitSize } from "@/lib/color/hierarchy";
@@ -310,6 +310,7 @@ export default function StudioPage() {
   const [showDualTheme, setShowDualTheme] = useState(true);
   const [previewMode, setPreviewMode] = useState<ThemeMode>("light");
   const [showExportPanel, setShowExportPanel] = useState(false);
+  const [trendingPalettes, setTrendingPalettes] = useState<CommunityPalette[]>([]);
   const maxFreeSaves = 2;
   const storageKey = "tonal-field:saved";
 
@@ -367,17 +368,19 @@ export default function StudioPage() {
 
     // Load locks from URL
     const locksParam = params.get("lk");
-    console.log("[DEBUG] Studio loading - locksParam from URL:", locksParam);
     if (locksParam) {
       const parsedLocks = deserializeLocks(locksParam);
-      console.log("[DEBUG] Studio loading - parsedLocks:", parsedLocks);
       if (Object.keys(parsedLocks).length > 0) {
         setLocks(parsedLocks);
-        console.log("[DEBUG] Studio loading - locks set successfully");
       }
     }
 
     setHasLoadedSeed(true);
+  }, []);
+
+  // Load trending palettes from community
+  useEffect(() => {
+    getTrendingPalettes(6).then(setTrendingPalettes).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -740,6 +743,27 @@ export default function StudioPage() {
     setLocks({});
   };
 
+  const handleLoadTrending = (palette: CommunityPalette) => {
+    setEnergy(palette.parameters.energy);
+    setTension(palette.parameters.tension);
+    if (typeof palette.parameters.hueBase === "number") {
+      setHueBase(palette.parameters.hueBase);
+    }
+    if (typeof palette.parameters.hueAuto === "boolean") {
+      setHueAuto(palette.parameters.hueAuto);
+    }
+    if (typeof palette.parameters.spectrumMode === "boolean") {
+      setSpectrumMode(palette.parameters.spectrumMode);
+    }
+    // Load locks if they exist
+    if (palette.parameters.locks) {
+      const parsedLocks = deserializeLocks(palette.parameters.locks);
+      setLocks(parsedLocks);
+    } else {
+      setLocks({});
+    }
+  };
+
   const handleApplyExtracted = () => {
     if (!extractedColors.length) {
       return;
@@ -912,8 +936,6 @@ export default function StudioPage() {
     try {
       // Serialize locks if any exist
       const serializedLocks = serializeLocks(locks);
-      console.log("[DEBUG] Publishing with locks:", locks);
-      console.log("[DEBUG] Serialized locks:", serializedLocks);
 
       await publishPalette({
         name: publishName.trim(),
@@ -1294,35 +1316,60 @@ export default function StudioPage() {
               <div className="preset-block">
                 <div className="preset-header">
                   <div className="preset-title">Presets</div>
-                  <div className="preset-note">Popular moods</div>
+                  <div className="preset-note">{trendingPalettes.length > 0 ? "Trending" : "Popular moods"}</div>
                 </div>
                 <div className="preset-grid">
-                  {presetSwatches.map((preset) => {
-                    const isActive =
-                      preset.energy === energy && preset.tension === tension;
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        className={`preset-btn${
-                          isActive ? " preset-active" : ""
-                        }`}
-                        onClick={() => {
-                          setEnergy(preset.energy);
-                          setTension(preset.tension);
-                        }}
-                      >
-                        <span
-                          className="preset-swatch"
-                          style={{ background: preset.gradient }}
-                        />
-                        <span className="preset-name">{preset.name}</span>
-                        <span className="preset-values">
-                          {preset.energy}/{preset.tension}
-                        </span>
-                      </button>
-                    );
-                  })}
+                  {trendingPalettes.length > 0 ? (
+                    trendingPalettes.map((tp) => {
+                      const bg = toCss(tp.palette.background);
+                      const pr = toCss(tp.palette.primary);
+                      return (
+                        <button
+                          key={tp.id}
+                          type="button"
+                          className="preset-btn"
+                          onClick={() => handleLoadTrending(tp)}
+                          title={`${tp.stats.likes} likes`}
+                        >
+                          <span
+                            className="preset-swatch"
+                            style={{ background: `linear-gradient(135deg, ${bg} 0 50%, ${pr} 50% 100%)` }}
+                          />
+                          <span className="preset-name">{tp.name}</span>
+                          <span className="preset-values">
+                            {tp.parameters.energy}/{tp.parameters.tension}
+                          </span>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    presetSwatches.map((preset) => {
+                      const isActive =
+                        preset.energy === energy && preset.tension === tension;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          className={`preset-btn${
+                            isActive ? " preset-active" : ""
+                          }`}
+                          onClick={() => {
+                            setEnergy(preset.energy);
+                            setTension(preset.tension);
+                          }}
+                        >
+                          <span
+                            className="preset-swatch"
+                            style={{ background: preset.gradient }}
+                          />
+                          <span className="preset-name">{preset.name}</span>
+                          <span className="preset-values">
+                            {preset.energy}/{preset.tension}
+                          </span>
+                        </button>
+                      );
+                    })
+                  )}
                 </div>
               </div>
               {lockedRoles.length ? (
@@ -1409,12 +1456,13 @@ export default function StudioPage() {
                 {paletteSections.map((section) => (
                   <div key={section.title} className="palette-group">
                     <div className="palette-group-title">{section.title}</div>
-                    <div className="palette-grid">
+                    <div className="palette-grid-responsive">
                       {section.roles.map((role) => {
                         const item = paletteByRole.get(role);
                         if (!item) {
                           return null;
                         }
+                        const colorValue = formatOklch(item.color);
                         return (
                           <div
                             key={item.key}
@@ -1431,9 +1479,14 @@ export default function StudioPage() {
                             }}
                           >
                             <div className="palette-role">{item.label}</div>
-                            <div className="palette-value">
-                              {formatOklch(item.color)}
-                            </div>
+                            <button
+                              type="button"
+                              className="palette-value-btn"
+                              onClick={() => handleCopy(colorValue, "Color copied!", "tokens")}
+                              title="Click to copy"
+                            >
+                              {colorValue}
+                            </button>
                             {item.proLocked ? (
                               <div className="locked-pill">Pro</div>
                             ) : null}

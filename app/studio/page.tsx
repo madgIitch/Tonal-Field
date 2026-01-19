@@ -561,9 +561,36 @@ export default function StudioPage() {
   }, [kitSize]);
 
   // Generate dual theme (light + dark variants)
+  // Apply autoFix to dark theme as well if enabled
   const dualTheme = useMemo(() => {
-    return generateDualTheme(palette);
-  }, [palette]);
+    const theme = generateDualTheme(palette);
+
+    if (autoFix) {
+      // Apply contrast fix to the derived theme (dark if source is light, light if source is dark)
+      const sourceMode = detectThemeMode(palette);
+      if (sourceMode === "light") {
+        // Dark theme was derived, fix its contrast
+        const darkFixed = isPro
+          ? fixPaletteContrast(theme.dark)
+          : fixPaletteContrastBasic(theme.dark);
+        return {
+          light: theme.light,
+          dark: darkFixed.palette,
+        };
+      } else {
+        // Light theme was derived, fix its contrast
+        const lightFixed = isPro
+          ? fixPaletteContrast(theme.light)
+          : fixPaletteContrastBasic(theme.light);
+        return {
+          light: lightFixed.palette,
+          dark: theme.dark,
+        };
+      }
+    }
+
+    return theme;
+  }, [palette, autoFix, isPro]);
 
   // Get current theme mode and contrast info
   const currentThemeMode = useMemo(() => detectThemeMode(palette), [palette]);

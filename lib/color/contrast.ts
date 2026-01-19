@@ -146,7 +146,7 @@ export const fixPaletteContrast = (palette: Palette): FixResult => {
   const muted = adjustLightnessForTargets(
     palette.muted,
     [palette.background, palette.surface],
-    3
+    4.5
   );
   const accent = adjustLightnessForTargets(
     palette.accent,

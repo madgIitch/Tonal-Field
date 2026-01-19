@@ -52,6 +52,7 @@ export async function getCommunityPalettes(): Promise<CommunityPalette[]> {
       hueBase?: number;
       hueAuto?: boolean;
       spectrumMode?: boolean;
+      locks?: string;
     },
     tags: p.tags as { mood: MoodTag[]; style: StyleTag[] },
     author: {

@@ -110,6 +110,11 @@ export default function CommunityPage() {
       sm: palette.parameters.spectrumMode ? "1" : "0",
     });
 
+    // Include locks if they exist
+    if (palette.parameters.locks) {
+      params.set("lk", palette.parameters.locks);
+    }
+
     window.location.href = `/studio?${params.toString()}`;
   };
 

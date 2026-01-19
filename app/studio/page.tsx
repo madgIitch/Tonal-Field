@@ -907,6 +907,9 @@ export default function StudioPage() {
     }
 
     try {
+      // Serialize locks if any exist
+      const serializedLocks = serializeLocks(locks);
+
       await publishPalette({
         name: publishName.trim(),
         description: publishDescription.trim() || undefined,
@@ -917,6 +920,7 @@ export default function StudioPage() {
           hueBase,
           hueAuto,
           spectrumMode,
+          ...(serializedLocks && { locks: serializedLocks }),
         },
         tags: {
           mood: publishMoods,

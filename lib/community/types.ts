@@ -1,5 +1,5 @@
 import type { OKLCH } from "../color/oklch";
-import type { Palette } from "../color/palette";
+import type { Palette, PaletteRole } from "../color/palette";
 
 /**
  * Community palette types for public sharing and discovery
@@ -47,6 +47,7 @@ export type CommunityPalette = {
     hueBase?: number;
     hueAuto?: boolean;
     spectrumMode?: boolean;
+    locks?: string; // Serialized locks: "bg.98.20.90,pr.55.150.240"
   };
   tags: {
     mood: MoodTag[];

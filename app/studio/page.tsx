@@ -238,8 +238,9 @@ export default function StudioPage() {
   const [publishDescription, setPublishDescription] = useState("");
   const [publishMoods, setPublishMoods] = useState<MoodTag[]>([]);
   const [publishStyles, setPublishStyles] = useState<StyleTag[]>([]);
-  const [kitSize, setKitSize] = useState<KitSize>(7);
+  const [kitSize, setKitSize] = useState<KitSize>(6);
   const [showHierarchy, setShowHierarchy] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [showDualTheme, setShowDualTheme] = useState(true);
   const [previewMode, setPreviewMode] = useState<ThemeMode>("light");
   const [showExportPanel, setShowExportPanel] = useState(false);
@@ -485,6 +486,10 @@ export default function StudioPage() {
     return getPaletteForMode(dualTheme, previewMode);
   }, [dualTheme, previewMode]);
 
+  const activeThemeContrast = useMemo(() => {
+    return previewMode === "light" ? themeContrast.light : themeContrast.dark;
+  }, [previewMode, themeContrast]);
+
   const themeVars = useMemo(() => {
   const p = activePalette; // o palette (la final ya auto-fixeada)
   const primaryText = pickTextColor(p.primary).color;
@@ -522,15 +527,19 @@ export default function StudioPage() {
   );
 
   const paletteDisplay = useMemo(() => {
-    const roles = isPro ? activeRoles : PREVIEW_ROLES;
-    const locked: PaletteRole[] = isPro ? [] : ["accent", "muted"];
+    const roles = activeRoles;
+    const locked: PaletteRole[] = isPro
+      ? []
+      : roles.filter((role) => role === "accent" || role === "muted");
 
-    const visible: PaletteDisplayItem[] = roles.map((role) => ({
-      key: role,
-      label: formatRole(role),
-      color: activePalette[role],
-      userLocked: Boolean(locks[role]),
-    }));
+    const visible: PaletteDisplayItem[] = roles
+      .filter((role) => !locked.includes(role))
+      .map((role) => ({
+        key: role,
+        label: formatRole(role),
+        color: activePalette[role],
+        userLocked: Boolean(locks[role]),
+      }));
 
     const lockedItems: PaletteDisplayItem[] = locked.map((role) => ({
       key: role,
@@ -541,6 +550,20 @@ export default function StudioPage() {
 
     return [...visible, ...lockedItems];
   }, [isPro, locks, activePalette, activeRoles]);
+
+  const paletteByRole = useMemo(() => {
+    const next = new Map<PaletteRole, PaletteDisplayItem>();
+    paletteDisplay.forEach((item) => {
+      next.set(item.key, item);
+    });
+    return next;
+  }, [paletteDisplay]);
+
+  const paletteSections: { title: string; roles: PaletteRole[] }[] = [
+    { title: "Fondos", roles: ["background", "surface"] },
+    { title: "Accion", roles: ["primary", "accent"] },
+    { title: "Texto", roles: ["text", "muted"] },
+  ];
 
   const exportRoles = isPro ? FULL_ROLES : PREVIEW_ROLES;
   const colorTokens = useMemo(
@@ -1021,55 +1044,132 @@ export default function StudioPage() {
                   onChange={setHueBase}
                   disabled={hueAuto || spectrumMode}
                 />
-                <label className="toggle">
-                  <input
-                    type="checkbox"
-                    checked={hueAuto}
-                    onChange={(event) => {
-                      const isAuto = event.target.checked;
-                      setHueAuto(isAuto);
-                      if (isAuto) {
-                        setSpectrumMode(false);
-                      }
-                    }}
-                  />
-                  <span>Auto (let Energy/Tension drive hue)</span>
-                </label>
-                <label className="toggle">
-                  <input
-                    type="checkbox"
-                    checked={spectrumMode}
-                    onChange={(event) => {
-                      const isSpectrum = event.target.checked;
-                      setSpectrumMode(isSpectrum);
-                      if (isSpectrum) {
-                        setHueAuto(false);
-                      }
-                    }}
-                  />
-                  <span>Spectrum mode (explore full color wheel)</span>
-                </label>
-                {spectrumMode && (
-                  <div style={{ marginTop: "16px", paddingLeft: "24px" }}>
-                    <label style={{ fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "8px", color: "#666" }}>
-                      Saturation: {Math.round(spectrumChroma)}%
+                <div className="collapsible-header">
+                  <span className="collapsible-label">Advanced options</span>
+                  <button
+                    type="button"
+                    className="collapsible-toggle"
+                    onClick={() => setShowAdvanced((prev) => !prev)}
+                    aria-expanded={showAdvanced}
+                  >
+                    {showAdvanced ? "Hide" : "Show"}
+                  </button>
+                </div>
+                <div
+                  className={`collapsible${showAdvanced ? " collapsible-open" : ""}`}
+                >
+                  <div className="collapsible-content">
+                    <label className="toggle">
+                      <input
+                        type="checkbox"
+                        checked={hueAuto}
+                        onChange={(event) => {
+                          const isAuto = event.target.checked;
+                          setHueAuto(isAuto);
+                          if (isAuto) {
+                            setSpectrumMode(false);
+                          }
+                        }}
+                      />
+                      <span>Auto (let Energy/Tension drive hue)</span>
                     </label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={spectrumChroma}
-                      onChange={(e) => setSpectrumChroma(Number(e.target.value))}
-                      style={{ width: "100%" }}
-                    />
+                    <label className="toggle">
+                      <input
+                        type="checkbox"
+                        checked={spectrumMode}
+                        onChange={(event) => {
+                          const isSpectrum = event.target.checked;
+                          setSpectrumMode(isSpectrum);
+                          if (isSpectrum) {
+                            setHueAuto(false);
+                          }
+                        }}
+                      />
+                      <span>Spectrum mode (explore full color wheel)</span>
+                    </label>
+                    {spectrumMode ? (
+                      <div>
+                        <label
+                          style={{
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            display: "block",
+                            marginBottom: "8px",
+                            color: "#666",
+                          }}
+                        >
+                          Saturation: {Math.round(spectrumChroma)}%
+                        </label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={spectrumChroma}
+                          onChange={(e) =>
+                            setSpectrumChroma(Number(e.target.value))
+                          }
+                          style={{ width: "100%" }}
+                        />
+                      </div>
+                    ) : null}
+                    <div className="import-block">
+                      <div className="preset-header">
+                        <div className="preset-title">Image import</div>
+                        <div className="preset-note">Extract palette</div>
+                      </div>
+                      <input
+                        className="import-input"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                      />
+                      <label className="toggle toggle-inline">
+                        <input type="checkbox" disabled />
+                        <span>OCR (coming soon)</span>
+                      </label>
+                      {imagePreview ? (
+                        <div className="import-preview">
+                          <img src={imagePreview} alt="Uploaded preview" />
+                          <span>{imageName}</span>
+                        </div>
+                      ) : (
+                        <div className="import-placeholder">No image loaded.</div>
+                      )}
+                      {isExtracting ? (
+                        <div className="import-status">Extracting colors...</div>
+                      ) : null}
+                      {extractError ? (
+                        <div className="import-error">{extractError}</div>
+                      ) : null}
+                      {extractedColors.length ? (
+                        <div className="import-results">
+                          <div className="import-swatches">
+                            {extractedColors.map((color, index) => (
+                              <span
+                                key={`${color.h}-${index}`}
+                                className="import-swatch"
+                                style={{ background: toCss(color) }}
+                              />
+                            ))}
+                          </div>
+                          <button
+                            type="button"
+                            className="import-apply"
+                            onClick={handleApplyExtracted}
+                          >
+                            Apply to palette
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
-                )}
+                </div>
                 <div style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px solid rgba(0,0,0,0.1)" }}>
                   <label style={{ fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "12px" }}>
                     Kit Size
                   </label>
                   <div style={{ display: "flex", gap: "8px" }}>
-                    {([3, 5, 7] as KitSize[]).map((size) => (
+                    {([3, 5, 6] as KitSize[]).map((size) => (
                       <button
                         key={size}
                         type="button"
@@ -1129,56 +1229,6 @@ export default function StudioPage() {
                     );
                   })}
                 </div>
-              </div>
-              <div className="import-block">
-                <div className="preset-header">
-                  <div className="preset-title">Image import</div>
-                  <div className="preset-note">Extract palette</div>
-                </div>
-                <input
-                  className="import-input"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                />
-                <label className="toggle toggle-inline">
-                  <input type="checkbox" disabled />
-                  <span>OCR (coming soon)</span>
-                </label>
-                {imagePreview ? (
-                  <div className="import-preview">
-                    <img src={imagePreview} alt="Uploaded preview" />
-                    <span>{imageName}</span>
-                  </div>
-                ) : (
-                  <div className="import-placeholder">No image loaded.</div>
-                )}
-                {isExtracting ? (
-                  <div className="import-status">Extracting colors...</div>
-                ) : null}
-                {extractError ? (
-                  <div className="import-error">{extractError}</div>
-                ) : null}
-                {extractedColors.length ? (
-                  <div className="import-results">
-                    <div className="import-swatches">
-                      {extractedColors.map((color, index) => (
-                        <span
-                          key={`${color.h}-${index}`}
-                          className="import-swatch"
-                          style={{ background: toCss(color) }}
-                        />
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      className="import-apply"
-                      onClick={handleApplyExtracted}
-                    >
-                      Apply to palette
-                    </button>
-                  </div>
-                ) : null}
               </div>
               {lockedRoles.length ? (
                 <div className="lock-summary">
@@ -1260,34 +1310,55 @@ export default function StudioPage() {
                   <div className="swatch-value">{formatOklch(pair.b)}</div>
                 </div>
               </div>
-              <div className="palette-grid">
-                {paletteDisplay.map((item) => (
-                  <div
-                    key={item.key}
-                    className={[
-                      "palette-swatch",
-                      item.proLocked ? "palette-locked" : "",
-                      item.userLocked ? "palette-user-locked" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    style={{
-                      background: toCss(item.color),
-                      color: swatchText(item.color),
-                    }}
-                  >
-                    <div className="palette-role">{item.label}</div>
-                    <div className="palette-value">{formatOklch(item.color)}</div>
-                    {item.proLocked ? <div className="locked-pill">Pro</div> : null}
-                    {!item.proLocked ? (
-                      <button
-                        type="button"
-                        className={`lock-btn${item.userLocked ? " is-locked" : ""}`}
-                        onClick={() => handleToggleLock(item.key, item.color)}
-                      >
-                        {item.userLocked ? "Locked" : "Lock"}
-                      </button>
-                    ) : null}
+              <div className="palette-groups">
+                {paletteSections.map((section) => (
+                  <div key={section.title} className="palette-group">
+                    <div className="palette-group-title">{section.title}</div>
+                    <div className="palette-grid">
+                      {section.roles.map((role) => {
+                        const item = paletteByRole.get(role);
+                        if (!item) {
+                          return null;
+                        }
+                        return (
+                          <div
+                            key={item.key}
+                            className={[
+                              "palette-swatch",
+                              item.proLocked ? "palette-locked" : "",
+                              item.userLocked ? "palette-user-locked" : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                            style={{
+                              background: toCss(item.color),
+                              color: swatchText(item.color),
+                            }}
+                          >
+                            <div className="palette-role">{item.label}</div>
+                            <div className="palette-value">
+                              {formatOklch(item.color)}
+                            </div>
+                            {item.proLocked ? (
+                              <div className="locked-pill">Pro</div>
+                            ) : null}
+                            {!item.proLocked ? (
+                              <button
+                                type="button"
+                                className={`lock-btn${
+                                  item.userLocked ? " is-locked" : ""
+                                }`}
+                                onClick={() =>
+                                  handleToggleLock(item.key, item.color)
+                                }
+                              >
+                                {item.userLocked ? "Locked" : "Lock"}
+                              </button>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1298,56 +1369,74 @@ export default function StudioPage() {
                   <span>Tonal Palettes (Material Design 3)</span>
                   <button
                     type="button"
-                    className="shuffle-btn"
-                    style={{ fontSize: "12px", padding: "4px 12px" }}
+                    className="collapsible-toggle"
                     onClick={() => setShowTonalPalettes(!showTonalPalettes)}
+                    aria-expanded={showTonalPalettes}
                   >
                     {showTonalPalettes ? "Hide" : "Show"}
                   </button>
                 </div>
-                {showTonalPalettes && extendedPalette.tonal ? (
-                  <div style={{ display: "grid", gap: "24px", marginTop: "16px" }}>
-                    {Object.entries(extendedPalette.tonal).map(([paletteName, tones]) => (
-                      <div key={paletteName} className="tonal-palette-row">
-                        <div className="tonal-palette-label" style={{
-                          fontSize: "13px",
-                          fontWeight: 600,
-                          marginBottom: "8px",
-                          textTransform: "capitalize"
-                        }}>
-                          {paletteName}
-                        </div>
-                        <div style={{
-                          display: "grid",
-                          gridTemplateColumns: "repeat(auto-fit, minmax(60px, 1fr))",
-                          gap: "4px"
-                        }}>
-                          {STANDARD_TONES.map((tone) => {
-                            const color = tones[tone];
-                            if (!color) return null;
-                            return (
+                <div
+                  className={`collapsible${showTonalPalettes ? " collapsible-open" : ""}`}
+                >
+                  <div className="collapsible-content">
+                    <p style={{ fontSize: "12px", opacity: 0.7, margin: 0 }}>
+                      Tonal palettes define role-based ramps: background/surface for layout, primary/accent for actions,
+                      and text/muted for readable contrast across light and dark modes.
+                    </p>
+                    {extendedPalette.tonal ? (
+                      <div style={{ display: "grid", gap: "24px" }}>
+                        {Object.entries(extendedPalette.tonal).map(
+                          ([paletteName, tones]) => (
+                            <div key={paletteName} className="tonal-palette-row">
                               <div
-                                key={tone}
+                                className="tonal-palette-label"
                                 style={{
-                                  background: toCss(color),
-                                  color: tone <= 50 ? "white" : "black",
-                                  padding: "12px 8px",
-                                  borderRadius: "6px",
-                                  fontSize: "11px",
-                                  textAlign: "center",
-                                  fontWeight: 500,
-                                  border: "1px solid rgba(0,0,0,0.1)",
+                                  fontSize: "13px",
+                                  fontWeight: 600,
+                                  marginBottom: "8px",
+                                  textTransform: "capitalize",
                                 }}
                               >
-                                {tone}
+                                {paletteName}
                               </div>
-                            );
-                          })}
-                        </div>
+                              <div
+                                style={{
+                                  display: "grid",
+                                  gridTemplateColumns:
+                                    "repeat(auto-fit, minmax(60px, 1fr))",
+                                  gap: "4px",
+                                }}
+                              >
+                                {STANDARD_TONES.map((tone) => {
+                                  const color = tones[tone];
+                                  if (!color) return null;
+                                  return (
+                                    <div
+                                      key={tone}
+                                      style={{
+                                        background: toCss(color),
+                                        color: tone <= 50 ? "white" : "black",
+                                        padding: "12px 8px",
+                                        borderRadius: "6px",
+                                        fontSize: "11px",
+                                        textAlign: "center",
+                                        fontWeight: 500,
+                                        border: "1px solid rgba(0,0,0,0.1)",
+                                      }}
+                                    >
+                                      {tone}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )
+                        )}
                       </div>
-                    ))}
+                    ) : null}
                   </div>
-                ) : null}
+                </div>
               </div>
 
               {/* Accessibility Section */}
@@ -1356,15 +1445,17 @@ export default function StudioPage() {
                   <span>Accessibility & Color Blindness</span>
                   <button
                     type="button"
-                    className="shuffle-btn"
-                    style={{ fontSize: "12px", padding: "4px 12px" }}
+                    className="collapsible-toggle"
                     onClick={() => setShowAccessibility(!showAccessibility)}
+                    aria-expanded={showAccessibility}
                   >
                     {showAccessibility ? "Hide" : "Show"}
                   </button>
                 </div>
-                {showAccessibility ? (
-                  <div style={{ display: "grid", gap: "24px", marginTop: "16px" }}>
+                <div
+                  className={`collapsible${showAccessibility ? " collapsible-open" : ""}`}
+                >
+                  <div className="collapsible-content">
                     {/* Color Blindness Simulator */}
                     <div>
                       <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
@@ -1474,15 +1565,15 @@ export default function StudioPage() {
                                 </div>
                                 <div style={{ flex: 1, display: "grid", gap: "4px", fontSize: "10px" }}>
                                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                    <span>{passesAA ? "✓" : "✗"}</span>
+                                    <span>{passesAA ? "OK" : "NO"}</span>
                                     <span>WCAG AA (4.5:1)</span>
                                   </div>
                                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                    <span>{passesAAA ? "✓" : "✗"}</span>
+                                    <span>{passesAAA ? "OK" : "NO"}</span>
                                     <span>WCAG AAA (7:1)</span>
                                   </div>
                                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                    <span>{contrast.passes.AALarge ? "✓" : "✗"}</span>
+                                    <span>{contrast.passes.AALarge ? "OK" : "NO"}</span>
                                     <span>AA Large (3:1)</span>
                                   </div>
                                 </div>
@@ -1529,7 +1620,7 @@ export default function StudioPage() {
                       </div>
                     </div>
                   </div>
-                ) : null}
+                </div>
               </div>
 
               {/* Hierarchy & Usage Section */}
@@ -1538,15 +1629,17 @@ export default function StudioPage() {
                   <span>Hierarchy & Usage ({kitSize} colors)</span>
                   <button
                     type="button"
-                    className="shuffle-btn"
-                    style={{ fontSize: "12px", padding: "4px 12px" }}
+                    className="collapsible-toggle"
                     onClick={() => setShowHierarchy(!showHierarchy)}
+                    aria-expanded={showHierarchy}
                   >
                     {showHierarchy ? "Hide" : "Show"}
                   </button>
                 </div>
-                {showHierarchy ? (
-                  <div style={{ marginTop: "16px" }}>
+                <div
+                  className={`collapsible${showHierarchy ? " collapsible-open" : ""}`}
+                >
+                  <div className="collapsible-content">
                     {/* Proportion Chart */}
                     <div style={{ marginBottom: "24px" }}>
                       <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
@@ -1627,7 +1720,7 @@ export default function StudioPage() {
                         border: "1px solid rgba(59, 130, 246, 0.15)",
                       }}>
                         <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "8px" }}>
-                          💡 60-30-10 Design Rule
+                          60-30-10 Design Rule
                         </div>
                         <div style={{ fontSize: "12px", lineHeight: 1.5, opacity: 0.8 }}>
                           The classic interior design rule: 60% dominant color (background), 30% secondary color (primary actions), and 10% accent color (text/highlights). This creates balanced, harmonious compositions.
@@ -1635,7 +1728,7 @@ export default function StudioPage() {
                       </div>
                     ) : null}
                   </div>
-                ) : null}
+                </div>
               </div>
             </div>
             </div>
@@ -1648,15 +1741,17 @@ export default function StudioPage() {
                   <span>Dual Theme (Light/Dark)</span>
                   <button
                     type="button"
-                    className="shuffle-btn"
-                    style={{ fontSize: "12px", padding: "4px 12px" }}
+                    className="collapsible-toggle"
                     onClick={() => setShowDualTheme(!showDualTheme)}
+                    aria-expanded={showDualTheme}
                   >
                     {showDualTheme ? "Hide" : "Show"}
                   </button>
                 </div>
-                {showDualTheme ? (
-                  <div style={{ marginTop: "16px" }}>
+                <div
+                  className={`collapsible${showDualTheme ? " collapsible-open" : ""}`}
+                >
+                  <div className="collapsible-content">
                     {/* Mode indicator */}
                     <div style={{ marginBottom: "20px", padding: "12px", background: "rgba(0,0,0,0.03)", borderRadius: "8px" }}>
                       <div style={{ fontSize: "12px", marginBottom: "4px", opacity: 0.7 }}>
@@ -1668,81 +1763,43 @@ export default function StudioPage() {
                     </div>
 
                     {/* Theme Mode Toggle */}
-                    <div style={{ marginBottom: "20px" }}>
+                    <div>
                       <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
                         Preview Mode
                       </div>
-                      <div style={{ display: "flex", gap: "8px" }}>
+                      <div className="preview-tabs">
                         {(["light", "dark"] as ThemeMode[]).map((mode) => (
                           <button
                             key={mode}
                             type="button"
+                            className={`preview-tab${previewMode === mode ? " preview-tab-active" : ""}`}
                             onClick={() => setPreviewMode(mode)}
-                            style={{
-                              flex: 1,
-                              padding: "10px",
-                              fontSize: "13px",
-                              fontWeight: 600,
-                              border: "1px solid rgba(0,0,0,0.15)",
-                              borderRadius: "6px",
-                              background: previewMode === mode ? "rgba(0,0,0,0.08)" : "transparent",
-                              cursor: "pointer",
-                              textTransform: "capitalize",
-                            }}
                           >
-                            {mode === "light" ? "☀️" : "🌙"} {mode}
+                            {mode === "light" ? "Light" : "Dark"}
                           </button>
                         ))}
                       </div>
                     </div>
 
-                    {/* Side-by-side preview */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
-                      {/* Light mode */}
-                      <div style={{ border: "1px solid rgba(0,0,0,0.1)", borderRadius: "8px", overflow: "hidden" }}>
-                        <div style={{ padding: "8px 12px", background: "rgba(0,0,0,0.03)", fontSize: "12px", fontWeight: 600, borderBottom: "1px solid rgba(0,0,0,0.1)" }}>
-                          ☀️ Light Mode
-                        </div>
-                        <div style={{ padding: "12px", background: toCss(dualTheme.light.background), minHeight: "120px" }}>
-                          <div style={{ padding: "12px", background: toCss(dualTheme.light.surface), borderRadius: "6px", marginBottom: "8px" }}>
-                            <div style={{ color: toCss(dualTheme.light.text), fontSize: "12px", fontWeight: 600, marginBottom: "6px" }}>
-                              Sample Card
-                            </div>
-                            <div style={{ color: toCss(dualTheme.light.muted), fontSize: "11px", marginBottom: "8px" }}>
-                              Body text with muted color for secondary information.
-                            </div>
-                            <div style={{ display: "flex", gap: "6px" }}>
-                              <div style={{ padding: "4px 8px", background: toCss(dualTheme.light.primary), color: "white", fontSize: "10px", borderRadius: "4px", fontWeight: 500 }}>
-                                Primary
-                              </div>
-                              <div style={{ padding: "4px 8px", background: toCss(dualTheme.light.accent), color: "white", fontSize: "10px", borderRadius: "4px", fontWeight: 500 }}>
-                                Accent
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                    {/* Single preview */}
+                    <div style={{ border: "1px solid rgba(0,0,0,0.1)", borderRadius: "8px", overflow: "hidden" }}>
+                      <div style={{ padding: "8px 12px", background: "rgba(0,0,0,0.03)", fontSize: "12px", fontWeight: 600, borderBottom: "1px solid rgba(0,0,0,0.1)" }}>
+                        {previewMode === "light" ? "Light" : "Dark"} Mode
                       </div>
-
-                      {/* Dark mode */}
-                      <div style={{ border: "1px solid rgba(0,0,0,0.1)", borderRadius: "8px", overflow: "hidden" }}>
-                        <div style={{ padding: "8px 12px", background: "rgba(0,0,0,0.03)", fontSize: "12px", fontWeight: 600, borderBottom: "1px solid rgba(0,0,0,0.1)" }}>
-                          🌙 Dark Mode
-                        </div>
-                        <div style={{ padding: "12px", background: toCss(dualTheme.dark.background), minHeight: "120px" }}>
-                          <div style={{ padding: "12px", background: toCss(dualTheme.dark.surface), borderRadius: "6px", marginBottom: "8px" }}>
-                            <div style={{ color: toCss(dualTheme.dark.text), fontSize: "12px", fontWeight: 600, marginBottom: "6px" }}>
-                              Sample Card
+                      <div style={{ padding: "12px", background: toCss(activePalette.background), minHeight: "120px" }}>
+                        <div style={{ padding: "12px", background: toCss(activePalette.surface), borderRadius: "6px", marginBottom: "8px" }}>
+                          <div style={{ color: toCss(activePalette.text), fontSize: "12px", fontWeight: 600, marginBottom: "6px" }}>
+                            Sample Card
+                          </div>
+                          <div style={{ color: toCss(activePalette.muted), fontSize: "11px", marginBottom: "8px" }}>
+                            Body text with muted color for secondary information.
+                          </div>
+                          <div style={{ display: "flex", gap: "6px" }}>
+                            <div style={{ padding: "4px 8px", background: toCss(activePalette.primary), color: "white", fontSize: "10px", borderRadius: "4px", fontWeight: 500 }}>
+                              Primary
                             </div>
-                            <div style={{ color: toCss(dualTheme.dark.muted), fontSize: "11px", marginBottom: "8px" }}>
-                              Body text with muted color for secondary information.
-                            </div>
-                            <div style={{ display: "flex", gap: "6px" }}>
-                              <div style={{ padding: "4px 8px", background: toCss(dualTheme.dark.primary), color: "white", fontSize: "10px", borderRadius: "4px", fontWeight: 500 }}>
-                                Primary
-                              </div>
-                              <div style={{ padding: "4px 8px", background: toCss(dualTheme.dark.accent), color: "white", fontSize: "10px", borderRadius: "4px", fontWeight: 500 }}>
-                                Accent
-                              </div>
+                            <div style={{ padding: "4px 8px", background: toCss(activePalette.accent), color: "white", fontSize: "10px", borderRadius: "4px", fontWeight: 500 }}>
+                              Accent
                             </div>
                           </div>
                         </div>
@@ -1754,58 +1811,28 @@ export default function StudioPage() {
                       <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
                         Contrast Ratios (WCAG 2.1)
                       </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                        {/* Light contrast */}
-                        <div style={{ padding: "12px", background: "rgba(0,0,0,0.02)", borderRadius: "6px", border: "1px solid rgba(0,0,0,0.08)" }}>
-                          <div style={{ fontSize: "11px", fontWeight: 600, marginBottom: "8px", opacity: 0.7 }}>
-                            ☀️ Light Mode
-                          </div>
-                          <div style={{ display: "grid", gap: "4px", fontSize: "11px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                              <span>Text/Background:</span>
-                              <strong style={{ color: themeContrast.light.textBg >= 4.5 ? "#22c55e" : "#ef4444" }}>
-                                {themeContrast.light.textBg.toFixed(2)}:1
-                              </strong>
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                              <span>Text/Surface:</span>
-                              <strong style={{ color: themeContrast.light.textSurface >= 4.5 ? "#22c55e" : "#ef4444" }}>
-                                {themeContrast.light.textSurface.toFixed(2)}:1
-                              </strong>
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                              <span>Muted/Background:</span>
-                              <strong style={{ color: themeContrast.light.mutedBg >= 3.0 ? "#22c55e" : "#ef4444" }}>
-                                {themeContrast.light.mutedBg.toFixed(2)}:1
-                              </strong>
-                            </div>
-                          </div>
+                      <div style={{ padding: "12px", background: "rgba(0,0,0,0.02)", borderRadius: "6px", border: "1px solid rgba(0,0,0,0.08)" }}>
+                        <div style={{ fontSize: "11px", fontWeight: 600, marginBottom: "8px", opacity: 0.7 }}>
+                          {previewMode === "light" ? "Light" : "Dark"} Mode
                         </div>
-
-                        {/* Dark contrast */}
-                        <div style={{ padding: "12px", background: "rgba(0,0,0,0.02)", borderRadius: "6px", border: "1px solid rgba(0,0,0,0.08)" }}>
-                          <div style={{ fontSize: "11px", fontWeight: 600, marginBottom: "8px", opacity: 0.7 }}>
-                            🌙 Dark Mode
+                        <div style={{ display: "grid", gap: "4px", fontSize: "11px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span>Text/Background:</span>
+                            <strong style={{ color: activeThemeContrast.textBg >= 4.5 ? "#22c55e" : "#ef4444" }}>
+                              {activeThemeContrast.textBg.toFixed(2)}:1
+                            </strong>
                           </div>
-                          <div style={{ display: "grid", gap: "4px", fontSize: "11px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                              <span>Text/Background:</span>
-                              <strong style={{ color: themeContrast.dark.textBg >= 4.5 ? "#22c55e" : "#ef4444" }}>
-                                {themeContrast.dark.textBg.toFixed(2)}:1
-                              </strong>
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                              <span>Text/Surface:</span>
-                              <strong style={{ color: themeContrast.dark.textSurface >= 4.5 ? "#22c55e" : "#ef4444" }}>
-                                {themeContrast.dark.textSurface.toFixed(2)}:1
-                              </strong>
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                              <span>Muted/Background:</span>
-                              <strong style={{ color: themeContrast.dark.mutedBg >= 3.0 ? "#22c55e" : "#ef4444" }}>
-                                {themeContrast.dark.mutedBg.toFixed(2)}:1
-                              </strong>
-                            </div>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span>Text/Surface:</span>
+                            <strong style={{ color: activeThemeContrast.textSurface >= 4.5 ? "#22c55e" : "#ef4444" }}>
+                              {activeThemeContrast.textSurface.toFixed(2)}:1
+                            </strong>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span>Muted/Background:</span>
+                            <strong style={{ color: activeThemeContrast.mutedBg >= 3.0 ? "#22c55e" : "#ef4444" }}>
+                              {activeThemeContrast.mutedBg.toFixed(2)}:1
+                            </strong>
                           </div>
                         </div>
                       </div>
@@ -1814,37 +1841,25 @@ export default function StudioPage() {
                     {/* Color swatches comparison */}
                     <div style={{ marginTop: "20px" }}>
                       <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px" }}>
-                        Color Comparison
+                        Color Roles
                       </div>
                       <div style={{ display: "grid", gap: "8px" }}>
                         {(["background", "surface", "primary", "accent", "text", "muted"] as const).map((role) => (
-                          <div key={role} style={{ display: "grid", gridTemplateColumns: "120px 1fr 1fr", gap: "8px", alignItems: "center" }}>
+                          <div key={role} style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: "8px", alignItems: "center" }}>
                             <div style={{ fontSize: "12px", fontWeight: 500, textTransform: "capitalize" }}>
                               {role}
                             </div>
                             <div style={{
                               padding: "8px 12px",
-                              background: toCss(dualTheme.light[role]),
-                              color: swatchText(dualTheme.light[role]),
+                              background: toCss(activePalette[role]),
+                              color: swatchText(activePalette[role]),
                               fontSize: "10px",
                               borderRadius: "4px",
                               border: "1px solid rgba(0,0,0,0.1)",
                               textAlign: "center",
                               fontWeight: 500,
                             }}>
-                              Light
-                            </div>
-                            <div style={{
-                              padding: "8px 12px",
-                              background: toCss(dualTheme.dark[role]),
-                              color: swatchText(dualTheme.dark[role]),
-                              fontSize: "10px",
-                              borderRadius: "4px",
-                              border: "1px solid rgba(0,0,0,0.1)",
-                              textAlign: "center",
-                              fontWeight: 500,
-                            }}>
-                              Dark
+                              {previewMode === "light" ? "Light" : "Dark"}
                             </div>
                           </div>
                         ))}
@@ -1945,7 +1960,7 @@ export default function StudioPage() {
                       </div>
                     </div>
                   </div>
-                ) : null}
+                </div>
                 </div>
               </div>
             </div>
@@ -1958,7 +1973,7 @@ export default function StudioPage() {
                   <span>Usage preview</span>
                   {showDualTheme ? (
                     <span style={{ fontSize: "11px", padding: "4px 10px", background: "rgba(0,0,0,0.05)", borderRadius: "4px", fontWeight: 500 }}>
-                      {previewMode === "light" ? "☀️" : "🌙"} {previewMode} mode
+                      {previewMode === "light" ? "Light" : "Dark"} mode
                     </span>
                   ) : null}
                 </div>
@@ -2030,33 +2045,33 @@ export default function StudioPage() {
               <div className="panel-title">Metrics</div>
               <div className="metrics">
                 <div className="metric">
-                  <span>Chroma</span>
+                  <span className="metric-label" data-tooltip="Overall chroma intensity of the pair.">Chroma</span>
                   <span>{pair.metrics.chroma.toFixed(3)}</span>
                 </div>
                 <div className="metric">
-                  <span>Hue diff</span>
+                  <span className="metric-label" data-tooltip="Angle distance between the two hues.">Hue diff</span>
                   <span>{Math.round(pair.metrics.hueDiff)} deg</span>
                 </div>
                 <div className="metric">
-                  <span>Lightness</span>
+                  <span className="metric-label" data-tooltip="Lightness contrast between A/B.">Lightness</span>
                   <span>{pair.metrics.lightnessContrast.toFixed(2)}</span>
                 </div>
                 <div className="metric">
-                  <span>Vibration</span>
+                  <span className="metric-label" data-tooltip="Perceived edge vibration risk.">Vibration</span>
                   <span>{pair.metrics.vibration.toFixed(2)}</span>
                 </div>
                 <div className="metric">
-                  <span>Energy fit</span>
+                  <span className="metric-label" data-tooltip="How well the palette matches the energy target.">Energy fit</span>
                   <span>{formatPercent(pair.metrics.energyFit)}</span>
                 </div>
                 <div className="metric">
-                  <span>Tension fit</span>
+                  <span className="metric-label" data-tooltip="How well the palette matches the tension target.">Tension fit</span>
                   <span>{formatPercent(pair.metrics.tensionFit)}</span>
                 </div>
               </div>
               <div className="score">
                 <div className="score-header">
-                  <span>Unified score</span>
+                  <span className="metric-label" data-tooltip="Combined score from hue, chroma, and contrast.">Unified score</span>
                   <span>{formatPercent(pair.metrics.score)}</span>
                 </div>
                 <div className="score-bar">

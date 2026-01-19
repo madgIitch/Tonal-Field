@@ -5,7 +5,7 @@ import type { Palette, PaletteRole } from "./palette";
  * Based on the 60-30-10 design rule
  */
 
-export type KitSize = 3 | 5 | 7;
+export type KitSize = 3 | 5 | 6;
 
 export type RoleHierarchy = {
   role: PaletteRole;
@@ -26,7 +26,7 @@ export const ROLE_SETS: Record<KitSize, PaletteRole[]> = {
   5: ["background", "surface", "primary", "accent", "text"],
 
   // Complete: All 6 roles
-  7: ["background", "surface", "primary", "accent", "text", "muted"],
+  6: ["background", "surface", "primary", "accent", "text", "muted"],
 };
 
 /**
@@ -129,7 +129,7 @@ export const HIERARCHIES: Record<KitSize, RoleHierarchy[]> = {
     },
   ],
 
-  7: [
+  6: [
     {
       role: "background",
       proportion: 45,
@@ -244,7 +244,7 @@ export function getProportionStyles(size: KitSize): Record<PaletteRole, string> 
  * Validate if a kit size is supported
  */
 export function isValidKitSize(size: number): size is KitSize {
-  return size === 3 || size === 5 || size === 7;
+  return size === 3 || size === 5 || size === 6;
 }
 
 /**
@@ -257,7 +257,7 @@ export function getRecommendedSize(useCase: "minimal" | "standard" | "complete")
     case "standard":
       return 5;
     case "complete":
-      return 7;
+      return 6;
   }
 }
 

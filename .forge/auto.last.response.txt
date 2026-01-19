@@ -1,0 +1,4 @@
+It seems like you're trying to create a color palette viewer with filtering and interaction features. However, your code is not properly formatted and it's hard to understand what you're trying to achieve. 
+
+Here's an example of how you might structure this in React using hooks:
+

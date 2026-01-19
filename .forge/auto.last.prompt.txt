@@ -1,0 +1,128 @@
+OUTPUT ONLY a unified diff.
+Start with: --- a/<path> and +++ b/<path>.
+No prose, no markdown fences, no diff --git, no index.
+Fix ONLY the lint warnings in the listed file(s).
+Do NOT change JSX structure.
+Do NOT output no-op diffs (changes that don't actually change anything).
+Allowed files:
+- app/community/page.tsx
+If changes are needed outside the allowed files, output an empty patch.
+Previous attempt issue: Output was not a unified diff with ---/+++ headers.
+
+Current file content (first 80 lines of app/community/page.tsx):
+```
+"use client";
+
+import { useEffect, useState } from "react";
+import { Frame } from "@/components/Frame";
+import { Section } from "@/components/Section";
+import { toCss } from "@/lib/color/oklch";
+import type { OKLCH } from "@/lib/color/oklch";
+import type { CommunityPalette, FilterOptions, MoodTag, StyleTag } from "@/lib/community/types";
+import { MOOD_TAGS, STYLE_TAGS } from "@/lib/community/types";
+import {
+  filterPalettes,
+  likePalette,
+  savePalette as saveCommunityPalette,
+  getUserInteraction,
+  trackView,
+} from "@/lib/community/supabase-service";
+import { useAuth } from "@/lib/auth/AuthProvider";
+import { AuthModal } from "@/components/AuthModal";
+
+const swatchText = (color: OKLCH) =>
+  color.l > 0.6 ? "oklch(20% 0.02 90)" : "oklch(98% 0.02 90)";
+
+export default function CommunityPage() {
+  const { user, loading: authLoading } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [palettes, setPalettes] = useState<CommunityPalette[]>([]);
+  const [selectedMoods, setSelectedMoods] = useState<MoodTag[]>([]);
+  const [selectedStyles, setSelectedStyles] = useState<StyleTag[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"recent" | "popular" | "trending">("recent");
+  const [interactions, setInteractions] = useState<Map<string, { liked: boolean; saved: boolean }>>(
+    new Map()
+  );
+  const [loading, setLoading] = useState(true);
+
+  // Check authentication on mount
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setShowAuthModal(true);
+    }
+  }, [user, authLoading]);
+
+  // Load palettes on mount
+  useEffect(() => {
+    loadPalettes();
+  }, []);
+
+  const loadPalettes = async () => {
+    setLoading(true);
+    const filters: FilterOptions = {
+      mood: selectedMoods.length > 0 ? selectedMoods : undefined,
+      style: selectedStyles.length > 0 ? selectedStyles : undefined,
+      search: searchQuery || undefined,
+      sortBy,
+    };
+
+    const filtered = await filterPalettes(filters);
+    setPalettes(filtered);
+
+    // Load user interactions
+    const interactionMap = new Map<string, { liked: boolean; saved: boolean }>();
+    for (const p of filtered) {
+      const interaction = await getUserInteraction(p.id);
+      if (interaction) {
+        interactionMap.set(p.id, {
+          liked: interaction.liked,
+          saved: interaction.saved,
+        });
+      }
+    }
+    setInteractions(interactionMap);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadPalettes();
+  }, [selectedMoods, selectedStyles, searchQuery, sortBy]);
+
+  const handleToggleMood = (mood: MoodTag) => {
+    setSelectedMoods((prev) =>
+```
+
+Example:
+--- a/path/to/file.ts
++++ b/path/to/file.ts
+@@
+-const x = 1;
++const x = 2;
+
+CRITICAL: If a function is used in useEffect, you MUST wrap it in useCallback.
+DO NOT just add the function to the dependency array.
+You MUST modify BOTH the import statement AND the function definition.
+
+React Hook fix example:
+--- a/Component.tsx
++++ b/Component.tsx
+@@ -1,8 +1,8 @@
+-import { useEffect, useState } from "react";
++import { useEffect, useState, useCallback } from "react";
+ 
+ function Component() {
+-  const loadData = async () => {
++  const loadData = useCallback(async () => {
+     // fetch logic
+-  };
++  }, [dependency1, dependency2]);
+ 
+   useEffect(() => {
+     loadData();
+-  }, []);
++  }, [loadData]);
+Errors:
+./app/community/page.tsx
+46:6  Warning: React Hook useEffect has a missing dependency: 'loadPalettes'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+77:6  Warning: React Hook useEffect has a missing dependency: 'loadPalettes'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps

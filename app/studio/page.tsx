@@ -712,18 +712,32 @@ export default function StudioPage() {
     if (isMd3Mode && md3TonalPalettes) {
       const isDark = previewMode === "dark";
 
+      // Valid MD3 tones
+      const VALID_TONES = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100];
+      const toValidTone = (tone: number) => {
+        return VALID_TONES.reduce((prev, curr) =>
+          Math.abs(curr - tone) < Math.abs(prev - tone) ? curr : prev
+        );
+      };
+
+      // Safe getter
+      const getTone = (palette: typeof md3TonalPalettes.primary, tone: number) => {
+        const validTone = toValidTone(tone);
+        return palette[validTone] || palette[40];
+      };
+
       // MD3 surface/background from neutral palette
       const bgTone = isDark ? 10 : 99;
       const surfaceTone = isDark ? 20 : 95;
       const textTone = isDark ? 90 : 10;
       const mutedTone = isDark ? 60 : 50;
 
-      const md3Bg = md3TonalPalettes.neutral[bgTone];
-      const md3Surface = md3TonalPalettes.neutral[surfaceTone];
-      const md3Text = md3TonalPalettes.neutral[textTone];
-      const md3Muted = md3TonalPalettes.neutral[mutedTone];
-      const md3Primary = md3TonalPalettes.primary[md3Tones.primary];
-      const md3Accent = md3TonalPalettes.tertiary[md3Tones.tertiary];
+      const md3Bg = getTone(md3TonalPalettes.neutral, bgTone);
+      const md3Surface = getTone(md3TonalPalettes.neutral, surfaceTone);
+      const md3Text = getTone(md3TonalPalettes.neutral, textTone);
+      const md3Muted = getTone(md3TonalPalettes.neutral, mutedTone);
+      const md3Primary = getTone(md3TonalPalettes.primary, md3Tones.primary);
+      const md3Accent = getTone(md3TonalPalettes.tertiary, md3Tones.tertiary);
       const md3PrimaryText = pickTextColor(md3Primary).color;
 
       return {
@@ -775,6 +789,12 @@ export default function StudioPage() {
         );
       };
 
+      // Safe getter that always returns a valid color
+      const getTone = (palette: typeof md3TonalPalettes.primary, tone: number) => {
+        const validTone = toValidTone(tone);
+        return palette[validTone] || palette[40]; // fallback to 40 if undefined
+      };
+
       // Helper to get container tones based on the selected tone
       // Containers are typically ±50 from the main tone
       const getContainerTone = (mainTone: number, isDarkMode: boolean) => {
@@ -790,36 +810,41 @@ export default function StudioPage() {
         return toValidTone(Math.max(0, Math.min(100, raw)));
       };
 
-      // Neutral tone is user-controlled via slider
-      const neutralTone = md3Tones.neutral;
-      const md3Bg = md3TonalPalettes.neutral[neutralTone];
+      // Neutral tone is user-controlled via slider (validate it first)
+      const neutralTone = toValidTone(md3Tones.neutral);
+      const primaryTone = toValidTone(md3Tones.primary);
+      const secondaryTone = toValidTone(md3Tones.secondary);
+      const tertiaryTone = toValidTone(md3Tones.tertiary);
+      const errorTone = toValidTone(md3Tones.error);
+
+      const md3Bg = getTone(md3TonalPalettes.neutral, neutralTone);
       const surfaceToneCalc = isDark ? toValidTone(Math.min(100, neutralTone + 10)) : toValidTone(Math.max(0, neutralTone - 5));
-      const md3Surface = md3TonalPalettes.neutral[surfaceToneCalc];
+      const md3Surface = getTone(md3TonalPalettes.neutral, surfaceToneCalc);
       const surfaceContainerCalc = isDark ? toValidTone(Math.min(100, neutralTone + 20)) : toValidTone(Math.max(0, neutralTone - 10));
-      const md3SurfaceContainer = md3TonalPalettes.neutral[surfaceContainerCalc];
-      const md3Text = md3TonalPalettes.neutral[isDark ? 90 : 10];
-      const md3Muted = md3TonalPalettes.neutral[isDark ? 60 : 50];
-      const md3Outline = md3TonalPalettes.neutral[isDark ? 60 : 50];
+      const md3SurfaceContainer = getTone(md3TonalPalettes.neutral, surfaceContainerCalc);
+      const md3Text = getTone(md3TonalPalettes.neutral, isDark ? 90 : 10);
+      const md3Muted = getTone(md3TonalPalettes.neutral, isDark ? 60 : 50);
+      const md3Outline = getTone(md3TonalPalettes.neutral, isDark ? 60 : 50);
 
-      const md3Primary = md3TonalPalettes.primary[md3Tones.primary];
-      const primaryContainerTone = getContainerTone(md3Tones.primary, isDark);
-      const md3PrimaryContainer = md3TonalPalettes.primary[primaryContainerTone];
-      const md3OnPrimaryContainer = md3TonalPalettes.primary[getOnContainerTone(md3Tones.primary, isDark)];
+      const md3Primary = getTone(md3TonalPalettes.primary, primaryTone);
+      const primaryContainerTone = getContainerTone(primaryTone, isDark);
+      const md3PrimaryContainer = getTone(md3TonalPalettes.primary, primaryContainerTone);
+      const md3OnPrimaryContainer = getTone(md3TonalPalettes.primary, getOnContainerTone(primaryTone, isDark));
 
-      const md3Secondary = md3TonalPalettes.secondary[md3Tones.secondary];
-      const secondaryContainerTone = getContainerTone(md3Tones.secondary, isDark);
-      const md3SecondaryContainer = md3TonalPalettes.secondary[secondaryContainerTone];
-      const md3OnSecondaryContainer = md3TonalPalettes.secondary[getOnContainerTone(md3Tones.secondary, isDark)];
+      const md3Secondary = getTone(md3TonalPalettes.secondary, secondaryTone);
+      const secondaryContainerTone = getContainerTone(secondaryTone, isDark);
+      const md3SecondaryContainer = getTone(md3TonalPalettes.secondary, secondaryContainerTone);
+      const md3OnSecondaryContainer = getTone(md3TonalPalettes.secondary, getOnContainerTone(secondaryTone, isDark));
 
-      const md3Tertiary = md3TonalPalettes.tertiary[md3Tones.tertiary];
-      const tertiaryContainerTone = getContainerTone(md3Tones.tertiary, isDark);
-      const md3TertiaryContainer = md3TonalPalettes.tertiary[tertiaryContainerTone];
-      const md3OnTertiaryContainer = md3TonalPalettes.tertiary[getOnContainerTone(md3Tones.tertiary, isDark)];
+      const md3Tertiary = getTone(md3TonalPalettes.tertiary, tertiaryTone);
+      const tertiaryContainerTone = getContainerTone(tertiaryTone, isDark);
+      const md3TertiaryContainer = getTone(md3TonalPalettes.tertiary, tertiaryContainerTone);
+      const md3OnTertiaryContainer = getTone(md3TonalPalettes.tertiary, getOnContainerTone(tertiaryTone, isDark));
 
-      const md3Error = md3TonalPalettes.error[md3Tones.error];
-      const errorContainerTone = getContainerTone(md3Tones.error, isDark);
-      const md3ErrorContainer = md3TonalPalettes.error[errorContainerTone];
-      const md3OnErrorContainer = md3TonalPalettes.error[getOnContainerTone(md3Tones.error, isDark)];
+      const md3Error = getTone(md3TonalPalettes.error, errorTone);
+      const errorContainerTone = getContainerTone(errorTone, isDark);
+      const md3ErrorContainer = getTone(md3TonalPalettes.error, errorContainerTone);
+      const md3OnErrorContainer = getTone(md3TonalPalettes.error, getOnContainerTone(errorTone, isDark));
 
       return {
         background: toCss(md3Bg),

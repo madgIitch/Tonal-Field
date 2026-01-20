@@ -573,7 +573,7 @@ export default function StudioPage() {
       setTone("primary", toneFromColor(palette.primary));
       setTone("secondary", toneFromColor(palette.accent));
       setTone("tertiary", toneFromColor(palette.accent));
-      setTone("neutral", toneFromColor(palette.background));
+      setTone("neutral", toneFromColor(palette.surface));
 
       if (!md3Locks.error) {
         next.error =

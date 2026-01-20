@@ -41,7 +41,7 @@ import {
   buildAppleColorList,
 } from "@/lib/color/export";
 import type { TokenFormat } from "@/lib/color/export";
-import { STANDARD_TONES } from "@/lib/color/tonal";
+import { STANDARD_TONES, generateTonalPalette } from "@/lib/color/tonal";
 import { extractDominantColors } from "@/lib/color/extract";
 import {
   simulateColorBlindness,
@@ -586,7 +586,53 @@ export default function StudioPage() {
     return buildRoleTonalPalettes(basePalette);
   }, [basePalette]);
 
-  const md3TonalPalettes = extendedPalette.tonal;
+  // Generate MD3 tonal palettes following Material Design 3 color derivation rules
+  const md3TonalPalettes = useMemo(() => {
+    const primaryHue = palette.primary.h;
+    const primaryChroma = palette.primary.c;
+
+    // Primary: the main brand color
+    const primaryTonal = generateTonalPalette(palette.primary, 0.04);
+
+    // Secondary (MD3): Same hue as primary, reduced chroma (~1/3)
+    // Used for less prominent components, filters, chips
+    const secondaryBase = {
+      l: 0.5,
+      c: Math.max(primaryChroma * 0.33, 0.04),
+      h: primaryHue,
+    };
+    const secondaryTonal = generateTonalPalette(secondaryBase, 0.03);
+
+    // Tertiary (MD3): Analogous hue (+60° from primary) for visual interest
+    // Creates a triadic relationship with primary and secondary
+    const tertiaryBase = {
+      l: 0.5,
+      c: Math.max(primaryChroma * 0.5, 0.06),
+      h: (primaryHue + 60) % 360,
+    };
+    const tertiaryTonal = generateTonalPalette(tertiaryBase, 0.04);
+
+    // Neutral (MD3): Derived from primary hue with very low chroma
+    // Tinted neutral for surfaces and backgrounds
+    const neutralBase = {
+      l: 0.5,
+      c: 0.01,
+      h: primaryHue,
+    };
+    const neutralTonal = generateTonalPalette(neutralBase, 0.005);
+
+    // Error: Standard Material Design error red
+    const errorBase = { l: 0.5, c: 0.18, h: 25 };
+    const errorTonal = generateTonalPalette(errorBase, 0.08);
+
+    return {
+      primary: primaryTonal,
+      secondary: secondaryTonal,
+      tertiary: tertiaryTonal,
+      neutral: neutralTonal,
+      error: errorTonal,
+    };
+  }, [palette]);
 
   // Handler for tone changes
   const handleToneChange = useCallback(

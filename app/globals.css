@@ -1619,6 +1619,187 @@ body {
   border: 1px solid currentColor;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   MD3 Preview Styles
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.ui-preview-md3 {
+  padding: 0;
+  overflow: hidden;
+  min-height: 380px;
+  position: relative;
+}
+
+.md3-preview-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid color-mix(in oklch, currentColor, transparent 90%);
+}
+
+.md3-preview-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.md3-preview-icons {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.md3-icon {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.md3-preview-content {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.md3-card {
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.md3-card:hover {
+  transform: translateY(-2px);
+}
+
+.md3-card-filled {
+  box-shadow: 0 2px 8px color-mix(in oklch, currentColor, transparent 85%);
+}
+
+.md3-card-outlined {
+  border: 1px solid;
+  grid-column: span 3;
+}
+
+.md3-card-error {
+  grid-column: span 3;
+}
+
+.md3-card-label {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.md3-card-desc {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.md3-card-body {
+  font-size: 12px;
+  margin: 4px 0 8px;
+  line-height: 1.4;
+}
+
+.md3-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.md3-chip {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.md3-chip-outlined {
+  background: transparent;
+  border: 1px solid;
+}
+
+.md3-buttons {
+  grid-column: span 3;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.md3-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+}
+
+.md3-btn:hover {
+  transform: translateY(-1px);
+}
+
+.md3-btn-filled {
+  box-shadow: 0 2px 8px color-mix(in oklch, currentColor, transparent 70%);
+}
+
+.md3-btn-filled:hover {
+  box-shadow: 0 4px 12px color-mix(in oklch, currentColor, transparent 60%);
+}
+
+.md3-btn-tonal {
+  box-shadow: none;
+}
+
+.md3-btn-tonal:hover {
+  opacity: 0.9;
+}
+
+.md3-btn-outlined {
+  background: transparent;
+  border: 1px solid;
+}
+
+.md3-btn-text {
+  background: transparent;
+}
+
+.md3-btn-text:hover {
+  background: color-mix(in oklch, currentColor, transparent 92%);
+}
+
+.md3-fab {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 300;
+  box-shadow: 0 4px 12px color-mix(in oklch, currentColor, transparent 70%);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.md3-fab:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 20px color-mix(in oklch, currentColor, transparent 60%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   End MD3 Preview Styles
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .palette-swatch {
   position: relative;
   border-radius: 12px;

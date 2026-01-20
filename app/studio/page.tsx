@@ -760,19 +760,94 @@ export default function StudioPage() {
     });
   }, [themeVars]);
 
-  const paletteStyles = useMemo(
-    () => ({
+  const paletteStyles = useMemo(() => {
+    // When in MD3 mode, derive preview styles from MD3 tonal palettes
+    if (isMd3Mode && md3TonalPalettes) {
+      const isDark = previewMode === "dark";
+
+      // MD3 tone assignments following Material Design 3 spec
+      const bgTone = isDark ? 10 : 99;
+      const surfaceTone = isDark ? 20 : 95;
+      const surfaceContainerTone = isDark ? 30 : 90;
+      const textTone = isDark ? 90 : 10;
+      const mutedTone = isDark ? 60 : 50;
+      const outlineTone = isDark ? 60 : 50;
+
+      const md3Bg = md3TonalPalettes.neutral[bgTone];
+      const md3Surface = md3TonalPalettes.neutral[surfaceTone];
+      const md3SurfaceContainer = md3TonalPalettes.neutral[surfaceContainerTone];
+      const md3Text = md3TonalPalettes.neutral[textTone];
+      const md3Muted = md3TonalPalettes.neutral[mutedTone];
+      const md3Outline = md3TonalPalettes.neutral[outlineTone];
+      const md3Primary = md3TonalPalettes.primary[md3Tones.primary];
+      const md3PrimaryContainer = md3TonalPalettes.primary[isDark ? 30 : 90];
+      const md3OnPrimaryContainer = md3TonalPalettes.primary[isDark ? 90 : 10];
+      const md3Secondary = md3TonalPalettes.secondary[md3Tones.secondary];
+      const md3SecondaryContainer = md3TonalPalettes.secondary[isDark ? 30 : 90];
+      const md3OnSecondaryContainer = md3TonalPalettes.secondary[isDark ? 90 : 10];
+      const md3Tertiary = md3TonalPalettes.tertiary[md3Tones.tertiary];
+      const md3TertiaryContainer = md3TonalPalettes.tertiary[isDark ? 30 : 90];
+      const md3OnTertiaryContainer = md3TonalPalettes.tertiary[isDark ? 90 : 10];
+      const md3Error = md3TonalPalettes.error[md3Tones.error];
+      const md3ErrorContainer = md3TonalPalettes.error[isDark ? 30 : 90];
+      const md3OnErrorContainer = md3TonalPalettes.error[isDark ? 90 : 10];
+
+      return {
+        background: toCss(md3Bg),
+        surface: toCss(md3Surface),
+        surfaceContainer: toCss(md3SurfaceContainer),
+        text: toCss(md3Text),
+        muted: toCss(md3Muted),
+        mutedText: toCss(pickTextColor(md3Muted).color),
+        outline: toCss(md3Outline),
+        primary: toCss(md3Primary),
+        primaryText: toCss(pickTextColor(md3Primary).color),
+        primaryContainer: toCss(md3PrimaryContainer),
+        onPrimaryContainer: toCss(md3OnPrimaryContainer),
+        secondary: toCss(md3Secondary),
+        secondaryText: toCss(pickTextColor(md3Secondary).color),
+        secondaryContainer: toCss(md3SecondaryContainer),
+        onSecondaryContainer: toCss(md3OnSecondaryContainer),
+        tertiary: toCss(md3Tertiary),
+        tertiaryText: toCss(pickTextColor(md3Tertiary).color),
+        tertiaryContainer: toCss(md3TertiaryContainer),
+        onTertiaryContainer: toCss(md3OnTertiaryContainer),
+        error: toCss(md3Error),
+        errorText: toCss(pickTextColor(md3Error).color),
+        errorContainer: toCss(md3ErrorContainer),
+        onErrorContainer: toCss(md3OnErrorContainer),
+        accent: toCss(md3Tertiary), // alias for compatibility
+      };
+    }
+
+    // Standard palette mode
+    return {
       background: toCss(activePalette.background),
       surface: toCss(activePalette.surface),
+      surfaceContainer: toCss(activePalette.surface),
       text: toCss(activePalette.text),
       muted: toCss(activePalette.muted),
       mutedText: toCss(pickTextColor(activePalette.muted).color),
+      outline: toCss(activePalette.muted),
       primary: toCss(activePalette.primary),
       primaryText: toCss(pickTextColor(activePalette.primary).color),
+      primaryContainer: toCss(activePalette.primary),
+      onPrimaryContainer: toCss(pickTextColor(activePalette.primary).color),
+      secondary: toCss(activePalette.accent),
+      secondaryText: toCss(pickTextColor(activePalette.accent).color),
+      secondaryContainer: toCss(activePalette.accent),
+      onSecondaryContainer: toCss(pickTextColor(activePalette.accent).color),
+      tertiary: toCss(activePalette.accent),
+      tertiaryText: toCss(pickTextColor(activePalette.accent).color),
+      tertiaryContainer: toCss(activePalette.accent),
+      onTertiaryContainer: toCss(pickTextColor(activePalette.accent).color),
+      error: "oklch(0.55 0.18 25)",
+      errorText: "#fff",
+      errorContainer: "oklch(0.9 0.08 25)",
+      onErrorContainer: "oklch(0.2 0.08 25)",
       accent: toCss(activePalette.accent),
-    }),
-    [activePalette]
-  );
+    };
+  }, [activePalette, isMd3Mode, md3TonalPalettes, md3Tones, previewMode]);
 
   const paletteDisplay = useMemo(() => {
     const roles = activeRoles;
@@ -2114,53 +2189,166 @@ export default function StudioPage() {
                   </div>
                 </div>
                 <div
-                  className={`ui-preview${isPro ? "" : " preview-locked"}`}
+                  className={`ui-preview${isPro ? "" : " preview-locked"}${isMd3Mode ? " ui-preview-md3" : ""}`}
                   style={{
                     background: paletteStyles.background,
                     color: paletteStyles.text,
                   }}
                 >
-                  <div
-                    className="ui-card"
-                    style={{ background: paletteStyles.surface }}
-                  >
-                    <span
-                      className="ui-chip"
-                      style={{
-                        background: paletteStyles.muted,
-                        color: paletteStyles.mutedText,
-                      }}
+                  {isMd3Mode ? (
+                    <>
+                      {/* MD3 Preview - More comprehensive UI elements */}
+                      <div className="md3-preview-header" style={{ background: paletteStyles.surface }}>
+                        <div className="md3-preview-nav">
+                          <span style={{ color: paletteStyles.primary }}>App Title</span>
+                          <div className="md3-preview-icons">
+                            <span className="md3-icon" style={{ color: paletteStyles.text }}>search</span>
+                            <span className="md3-icon" style={{ color: paletteStyles.text }}>more</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="md3-preview-content">
+                        {/* Primary Container Card */}
+                        <div
+                          className="md3-card md3-card-filled"
+                          style={{ background: paletteStyles.primaryContainer, color: paletteStyles.onPrimaryContainer }}
+                        >
+                          <span className="md3-card-label">Primary Container</span>
+                          <span className="md3-card-desc">Main content highlight</span>
+                        </div>
+
+                        {/* Secondary Container Card */}
+                        <div
+                          className="md3-card md3-card-filled"
+                          style={{ background: paletteStyles.secondaryContainer, color: paletteStyles.onSecondaryContainer }}
+                        >
+                          <span className="md3-card-label">Secondary</span>
+                          <span className="md3-card-desc">Supporting content</span>
+                        </div>
+
+                        {/* Tertiary Container Card */}
+                        <div
+                          className="md3-card md3-card-filled"
+                          style={{ background: paletteStyles.tertiaryContainer, color: paletteStyles.onTertiaryContainer }}
+                        >
+                          <span className="md3-card-label">Tertiary</span>
+                          <span className="md3-card-desc">Accent elements</span>
+                        </div>
+
+                        {/* Surface Card with outlined elements */}
+                        <div
+                          className="md3-card md3-card-outlined"
+                          style={{ background: paletteStyles.surface, borderColor: paletteStyles.outline }}
+                        >
+                          <span className="md3-card-label" style={{ color: paletteStyles.text }}>Surface Card</span>
+                          <p className="md3-card-body" style={{ color: paletteStyles.muted }}>
+                            Regular content on surface with muted secondary text.
+                          </p>
+                          <div className="md3-chips">
+                            <span className="md3-chip" style={{ background: paletteStyles.secondaryContainer, color: paletteStyles.onSecondaryContainer }}>
+                              Filter
+                            </span>
+                            <span className="md3-chip md3-chip-outlined" style={{ borderColor: paletteStyles.outline, color: paletteStyles.text }}>
+                              Option
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Buttons row */}
+                        <div className="md3-buttons">
+                          <button
+                            className="md3-btn md3-btn-filled"
+                            style={{ background: paletteStyles.primary, color: paletteStyles.primaryText }}
+                            type="button"
+                          >
+                            Primary
+                          </button>
+                          <button
+                            className="md3-btn md3-btn-tonal"
+                            style={{ background: paletteStyles.secondaryContainer, color: paletteStyles.onSecondaryContainer }}
+                            type="button"
+                          >
+                            Tonal
+                          </button>
+                          <button
+                            className="md3-btn md3-btn-outlined"
+                            style={{ borderColor: paletteStyles.outline, color: paletteStyles.primary }}
+                            type="button"
+                          >
+                            Outlined
+                          </button>
+                          <button
+                            className="md3-btn md3-btn-text"
+                            style={{ color: paletteStyles.primary }}
+                            type="button"
+                          >
+                            Text
+                          </button>
+                        </div>
+
+                        {/* Error state */}
+                        <div
+                          className="md3-card md3-card-filled md3-card-error"
+                          style={{ background: paletteStyles.errorContainer, color: paletteStyles.onErrorContainer }}
+                        >
+                          <span className="md3-card-label">Error State</span>
+                          <span className="md3-card-desc">Validation or warning</span>
+                        </div>
+                      </div>
+
+                      {/* FAB */}
+                      <div
+                        className="md3-fab"
+                        style={{ background: paletteStyles.primaryContainer, color: paletteStyles.onPrimaryContainer }}
+                      >
+                        +
+                      </div>
+                    </>
+                  ) : (
+                    /* Standard Preview */
+                    <div
+                      className="ui-card"
+                      style={{ background: paletteStyles.surface }}
                     >
-                      Muted label
-                    </span>
-                    <h3 className="ui-title">Interface sample</h3>
-                    <p className="ui-body">
-                      Primary actions use the main tone. Accent highlights secondary
-                      emphasis.
-                    </p>
-                    <div className="ui-actions">
-                      <button
-                        className="ui-btn ui-primary"
+                      <span
+                        className="ui-chip"
                         style={{
-                          background: paletteStyles.primary,
-                          color: paletteStyles.primaryText,
+                          background: paletteStyles.muted,
+                          color: paletteStyles.mutedText,
                         }}
-                        type="button"
                       >
-                        Primary action
-                      </button>
-                      <button
-                        className="ui-btn ui-ghost"
-                        style={{
-                          borderColor: paletteStyles.accent,
-                          color: paletteStyles.accent,
-                        }}
-                        type="button"
-                      >
-                        Accent link
-                      </button>
+                        Muted label
+                      </span>
+                      <h3 className="ui-title">Interface sample</h3>
+                      <p className="ui-body">
+                        Primary actions use the main tone. Accent highlights secondary
+                        emphasis.
+                      </p>
+                      <div className="ui-actions">
+                        <button
+                          className="ui-btn ui-primary"
+                          style={{
+                            background: paletteStyles.primary,
+                            color: paletteStyles.primaryText,
+                          }}
+                          type="button"
+                        >
+                          Primary action
+                        </button>
+                        <button
+                          className="ui-btn ui-ghost"
+                          style={{
+                            borderColor: paletteStyles.accent,
+                            color: paletteStyles.accent,
+                          }}
+                          type="button"
+                        >
+                          Accent link
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 {!isPro ? (
                   <div className="preview-cta">

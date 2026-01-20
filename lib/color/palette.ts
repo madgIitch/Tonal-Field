@@ -75,9 +75,7 @@ export function buildPalette(pair: Pair): Palette {
  * @param pair - The color pair from the generative model
  * @returns Extended palette with tonal variations and semantic schemes
  */
-export function buildExtendedPalette(pair: Pair): ExtendedPalette {
-  const basePalette = buildPalette(pair);
-
+export function buildExtendedPaletteFromPalette(basePalette: Palette): ExtendedPalette {
   // Generate tonal palettes for each key color
   const primaryTonal = generateTonalPalette(basePalette.primary, 0.04);
 
@@ -133,6 +131,10 @@ export function buildExtendedPalette(pair: Pair): ExtendedPalette {
       dark: darkScheme,
     },
   };
+}
+
+export function buildExtendedPalette(pair: Pair): ExtendedPalette {
+  return buildExtendedPaletteFromPalette(buildPalette(pair));
 }
 
 /**

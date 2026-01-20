@@ -10,7 +10,7 @@ import { Slider } from "@/components/Slider";
 import { generatePair } from "@/lib/color/model";
 import {
   buildPalette,
-  buildExtendedPalette,
+  buildExtendedPaletteFromPalette,
   buildRoleTonalPalettes,
   applyTonesToPalette,
   DEFAULT_ROLE_TONES,
@@ -317,6 +317,7 @@ export default function StudioPage() {
   const [kitSize, setKitSize] = useState<KitSize>(6);
   const [roleTones, setRoleTones] = useState<Record<PaletteRole, number>>(DEFAULT_ROLE_TONES);
   const [md3Tones, setMd3Tones] = useState<Record<MD3TonalRole, number>>(DEFAULT_MD3_TONES_LIGHT);
+  const [md3Locks, setMd3Locks] = useState<Partial<Record<MD3TonalRole, boolean>>>({});
   const [showHierarchy, setShowHierarchy] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [previewMode, setPreviewMode] = useState<ThemeMode>("light");
@@ -497,7 +498,6 @@ export default function StudioPage() {
   );
 
   const basePalette = useMemo(() => buildPalette(pair), [pair]);
-  const extendedPalette = useMemo(() => buildExtendedPalette(pair), [pair]);
 
   // Apply color blindness simulation if active
   const simulatedPalette = useMemo(() => {
@@ -550,6 +550,11 @@ export default function StudioPage() {
     });
     return next;
   }, [autoFixResult.palette, locks]);
+
+  const extendedPalette = useMemo(
+    () => buildExtendedPaletteFromPalette(palette),
+    [palette]
+  );
 
   const primaryText = useMemo(() => {
     if (locks.primary) {
@@ -656,11 +661,13 @@ export default function StudioPage() {
   );
 
   const handleMd3ToneChange = useCallback((role: MD3TonalRole, tone: number) => {
+    // Don't allow tone changes on locked colors
+    if (md3Locks[role]) return;
     setMd3Tones((prev) => ({
       ...prev,
       [role]: tone,
     }));
-  }, []);
+  }, [md3Locks]);
 
   // Generate dual theme (light + dark variants)
   // Apply autoFix to dark theme as well if enabled
@@ -1023,6 +1030,18 @@ export default function StudioPage() {
         delete next[role];
       } else {
         next[role] = { ...color };
+      }
+      return next;
+    });
+  };
+
+  const handleToggleMd3Lock = (role: MD3TonalRole) => {
+    setMd3Locks((prev) => {
+      const next = { ...prev };
+      if (next[role]) {
+        delete next[role];
+      } else {
+        next[role] = true;
       }
       return next;
     });
@@ -2056,9 +2075,10 @@ export default function StudioPage() {
                       const toneColor = tonalPalette[currentTone] ?? tonalPalette[40];
                       const roleInfo = MD3_ROLE_INFO[role];
                       const colorValue = formatOklch(toneColor);
+                      const isLocked = Boolean(md3Locks[role]);
 
                       return (
-                        <div key={role} className="md3-role-card">
+                        <div key={role} className={`md3-role-card${isLocked ? " md3-role-locked" : ""}`}>
                           <div className="md3-role-header">
                             <div>
                               <div className="md3-role-title">{roleInfo.label}</div>
@@ -2068,7 +2088,7 @@ export default function StudioPage() {
                           </div>
 
                           <div
-                            className="palette-swatch md3-role-swatch"
+                            className={`palette-swatch md3-role-swatch${isLocked ? " palette-user-locked" : ""}`}
                             style={{
                               background: toCss(toneColor),
                               color: swatchText(toneColor),
@@ -2083,9 +2103,16 @@ export default function StudioPage() {
                             >
                               {colorValue}
                             </button>
+                            <button
+                              type="button"
+                              className={`lock-btn${isLocked ? " is-locked" : ""}`}
+                              onClick={() => handleToggleMd3Lock(role)}
+                            >
+                              {isLocked ? "Locked" : "Lock"}
+                            </button>
                           </div>
 
-                          <div className="tonal-ramp-container">
+                          <div className={`tonal-ramp-container${isLocked ? " tonal-locked" : ""}`}>
                             <div className="tonal-ramp">
                               {STANDARD_TONES.map((tone) => {
                                 const swatchColor = tonalPalette[tone];
@@ -2097,23 +2124,26 @@ export default function StudioPage() {
                                     type="button"
                                     className={`tonal-swatch${isSelected ? " tonal-selected" : ""}`}
                                     style={{ background: toCss(swatchColor) }}
-                                    onClick={() => handleMd3ToneChange(role, tone)}
+                                    onClick={() => !isLocked && handleMd3ToneChange(role, tone)}
+                                    disabled={isLocked}
                                     title={`Tone ${tone}`}
                                   />
                                 );
                               })}
                             </div>
-                            <div className="tonal-slider-row">
-                              <input
-                                type="range"
-                                className="tonal-slider"
-                                min={0}
-                                max={100}
-                                value={currentTone}
-                                onChange={(e) => handleMd3ToneChange(role, Number(e.target.value))}
-                              />
-                              <span className="tonal-value">{currentTone}</span>
-                            </div>
+                            {!isLocked && (
+                              <div className="tonal-slider-row">
+                                <input
+                                  type="range"
+                                  className="tonal-slider"
+                                  min={0}
+                                  max={100}
+                                  value={currentTone}
+                                  onChange={(e) => handleMd3ToneChange(role, Number(e.target.value))}
+                                />
+                                <span className="tonal-value">{currentTone}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       );

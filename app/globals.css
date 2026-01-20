@@ -1448,6 +1448,15 @@ body {
   min-height: 80px;
 }
 
+.md3-role-locked {
+  border-color: color-mix(in oklch, var(--accent), transparent 50%);
+  background: color-mix(in oklch, var(--surface), var(--accent) 5%);
+}
+
+.md3-role-locked .md3-role-tone {
+  background: color-mix(in oklch, var(--accent), transparent 70%);
+}
+
 .palette-locked {
   position: relative;
   filter: grayscale(0.3);

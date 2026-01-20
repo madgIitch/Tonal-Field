@@ -633,6 +633,8 @@ export default function StudioPage() {
   const md3TonalPalettes = useMemo(() => {
     const primaryHue = palette.primary.h;
     const primaryChroma = palette.primary.c;
+    const surfaceHue = palette.surface.h;
+    const surfaceChroma = palette.surface.c;
 
     // Primary: the main brand color
     const primaryTonal = generateTonalPalette(palette.primary, 0.04);
@@ -659,8 +661,8 @@ export default function StudioPage() {
     // Tinted neutral for surfaces and backgrounds
     const neutralBase = {
       l: 0.5,
-      c: 0.01,
-      h: primaryHue,
+      c: Math.max(surfaceChroma * 0.5, 0.005),
+      h: surfaceHue,
     };
     const neutralTonal = generateTonalPalette(neutralBase, 0.005);
 

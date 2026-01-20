@@ -708,19 +708,49 @@ export default function StudioPage() {
   }, [previewMode, themeContrast]);
 
   const themeVars = useMemo(() => {
-  const p = activePalette; // o palette (la final ya auto-fixeada)
-  const primaryText = pickTextColor(p.primary).color;
+    // When in MD3 mode, derive UI colors from MD3 tonal palettes
+    if (isMd3Mode && md3TonalPalettes) {
+      const isDark = previewMode === "dark";
 
-  return {
-    "--tf-bg": toCss(p.background),
-    "--tf-surface": toCss(p.surface),
-    "--tf-text": toCss(p.text),
-    "--tf-muted": toCss(p.muted),
-    "--tf-primary": toCss(p.primary),
-    "--tf-accent": toCss(p.accent),
-    "--tf-primaryText": toCss(primaryText),
-  } as React.CSSProperties;
-}, [activePalette]);
+      // MD3 surface/background from neutral palette
+      const bgTone = isDark ? 10 : 99;
+      const surfaceTone = isDark ? 20 : 95;
+      const textTone = isDark ? 90 : 10;
+      const mutedTone = isDark ? 60 : 50;
+
+      const md3Bg = md3TonalPalettes.neutral[bgTone];
+      const md3Surface = md3TonalPalettes.neutral[surfaceTone];
+      const md3Text = md3TonalPalettes.neutral[textTone];
+      const md3Muted = md3TonalPalettes.neutral[mutedTone];
+      const md3Primary = md3TonalPalettes.primary[md3Tones.primary];
+      const md3Accent = md3TonalPalettes.tertiary[md3Tones.tertiary];
+      const md3PrimaryText = pickTextColor(md3Primary).color;
+
+      return {
+        "--tf-bg": toCss(md3Bg),
+        "--tf-surface": toCss(md3Surface),
+        "--tf-text": toCss(md3Text),
+        "--tf-muted": toCss(md3Muted),
+        "--tf-primary": toCss(md3Primary),
+        "--tf-accent": toCss(md3Accent),
+        "--tf-primaryText": toCss(md3PrimaryText),
+      } as React.CSSProperties;
+    }
+
+    // Standard palette mode
+    const p = activePalette;
+    const primaryText = pickTextColor(p.primary).color;
+
+    return {
+      "--tf-bg": toCss(p.background),
+      "--tf-surface": toCss(p.surface),
+      "--tf-text": toCss(p.text),
+      "--tf-muted": toCss(p.muted),
+      "--tf-primary": toCss(p.primary),
+      "--tf-accent": toCss(p.accent),
+      "--tf-primaryText": toCss(primaryText),
+    } as React.CSSProperties;
+  }, [activePalette, isMd3Mode, md3TonalPalettes, md3Tones, previewMode]);
 
   // Apply theme variables to document root for dynamic UI theming
   useEffect(() => {

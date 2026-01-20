@@ -2142,6 +2142,13 @@ export default function StudioPage() {
                             >
                               {isLocked ? "Locked" : "Lock"}
                             </button>
+                            <button
+                              type="button"
+                              className="lock-btn md3-copy-btn"
+                              onClick={() => handleCopy(colorValue, "Color copied!", "tokens")}
+                            >
+                              Copy
+                            </button>
                           </div>
 
                           <div className={`tonal-ramp-container${isLocked ? " tonal-locked" : ""}`}>

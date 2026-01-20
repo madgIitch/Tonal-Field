@@ -61,7 +61,8 @@ import {
   getHierarchyForSize,
   filterPaletteBySize,
   MD3_TONAL_ROLES,
-  DEFAULT_MD3_TONES,
+  DEFAULT_MD3_TONES_LIGHT,
+  DEFAULT_MD3_TONES_DARK,
   MD3_ROLE_INFO,
 } from "@/lib/color/hierarchy";
 import type { DualTheme, ThemeMode } from "@/lib/color/theme";
@@ -315,7 +316,7 @@ export default function StudioPage() {
   const [publishStyles, setPublishStyles] = useState<StyleTag[]>([]);
   const [kitSize, setKitSize] = useState<KitSize>(6);
   const [roleTones, setRoleTones] = useState<Record<PaletteRole, number>>(DEFAULT_ROLE_TONES);
-  const [md3Tones, setMd3Tones] = useState<Record<MD3TonalRole, number>>(DEFAULT_MD3_TONES);
+  const [md3Tones, setMd3Tones] = useState<Record<MD3TonalRole, number>>(DEFAULT_MD3_TONES_LIGHT);
   const [showHierarchy, setShowHierarchy] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [previewMode, setPreviewMode] = useState<ThemeMode>("light");
@@ -439,6 +440,13 @@ export default function StudioPage() {
     window.history.replaceState(null, "", nextUrl);
     setShareUrl(`${window.location.origin}${nextUrl}`);
   }, [autoFix, energy, hasLoadedSeed, tension, seed, hueBase, hueAuto, spectrumMode, locks]);
+
+  // Update MD3 tones when preview mode changes (light/dark)
+  useEffect(() => {
+    if (kitSize === "md3") {
+      setMd3Tones(previewMode === "dark" ? DEFAULT_MD3_TONES_DARK : DEFAULT_MD3_TONES_LIGHT);
+    }
+  }, [previewMode, kitSize]);
 
   const resolveHueBase = useCallback(
     (energyValue: number, tensionValue: number) => {

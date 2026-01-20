@@ -26,13 +26,30 @@ export const MD3_TONAL_ROLES: MD3TonalRole[] = [
 /**
  * Default tone values for MD3 roles (light mode)
  */
-export const DEFAULT_MD3_TONES: Record<MD3TonalRole, number> = {
+export const DEFAULT_MD3_TONES_LIGHT: Record<MD3TonalRole, number> = {
   primary: 40,
   secondary: 40,
   tertiary: 40,
   neutral: 90,
   error: 40,
 };
+
+/**
+ * Default tone values for MD3 roles (dark mode)
+ * Following Material Design 3 dark theme conventions
+ */
+export const DEFAULT_MD3_TONES_DARK: Record<MD3TonalRole, number> = {
+  primary: 80,
+  secondary: 80,
+  tertiary: 80,
+  neutral: 10,
+  error: 80,
+};
+
+/**
+ * @deprecated Use DEFAULT_MD3_TONES_LIGHT instead
+ */
+export const DEFAULT_MD3_TONES = DEFAULT_MD3_TONES_LIGHT;
 
 /**
  * MD3 role descriptions

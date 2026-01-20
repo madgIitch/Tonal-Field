@@ -442,13 +442,6 @@ export default function StudioPage() {
     setShareUrl(`${window.location.origin}${nextUrl}`);
   }, [autoFix, energy, hasLoadedSeed, tension, seed, hueBase, hueAuto, spectrumMode, locks]);
 
-  // Update MD3 tones when preview mode changes (light/dark)
-  useEffect(() => {
-    if (kitSize === "md3") {
-      setMd3Tones(previewMode === "dark" ? DEFAULT_MD3_TONES_DARK : DEFAULT_MD3_TONES_LIGHT);
-    }
-  }, [previewMode, kitSize]);
-
   const resolveHueBase = useCallback(
     (energyValue: number, tensionValue: number) => {
       // If Spectrum mode is active, map horizontal position to hue (0-360°)
@@ -555,6 +548,43 @@ export default function StudioPage() {
     () => buildExtendedPaletteFromPalette(palette),
     [palette]
   );
+
+  // Sync MD3 tones with the current palette so roles translate across modes.
+  useEffect(() => {
+    if (kitSize !== "md3") {
+      return;
+    }
+
+    const VALID_TONES = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100];
+    const toValidTone = (tone: number) =>
+      VALID_TONES.reduce((prev, curr) =>
+        Math.abs(curr - tone) < Math.abs(prev - tone) ? curr : prev
+      );
+    const toneFromColor = (color: OKLCH) => toValidTone(Math.round(color.l * 100));
+
+    setMd3Tones((prev) => {
+      const next = { ...prev };
+      const setTone = (role: MD3TonalRole, tone: number) => {
+        if (!md3Locks[role]) {
+          next[role] = tone;
+        }
+      };
+
+      setTone("primary", toneFromColor(palette.primary));
+      setTone("secondary", toneFromColor(palette.accent));
+      setTone("tertiary", toneFromColor(palette.accent));
+      setTone("neutral", toneFromColor(palette.background));
+
+      if (!md3Locks.error) {
+        next.error =
+          previewMode === "dark"
+            ? DEFAULT_MD3_TONES_DARK.error
+            : DEFAULT_MD3_TONES_LIGHT.error;
+      }
+
+      return next;
+    });
+  }, [kitSize, md3Locks, palette, previewMode]);
 
   const primaryText = useMemo(() => {
     if (locks.primary) {
